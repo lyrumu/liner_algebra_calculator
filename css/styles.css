@@ -428,3 +428,196 @@ select {
         gap: 2rem;
     }
 }
+
+/* ==================== 深色模式 ==================== */
+
+html.dark body {
+    background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #111827 100%);
+}
+
+/* 导航栏 */
+html.dark .nav-item {
+    color: #d1d5db;
+}
+
+html.dark .nav-item:hover {
+    color: #60a5fa;
+    background: rgba(59, 130, 246, 0.1);
+}
+
+html.dark .nav-item.active {
+    color: white;
+    background: #1a56db;
+}
+
+/* 卡片 */
+html.dark .result-card {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+html.dark .result-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 矩阵输入 */
+html.dark .matrix-cell-input {
+    background: #374151;
+    border-color: #4b5563;
+    color: #e5e7eb;
+}
+
+html.dark .matrix-cell-input:focus {
+    background: #1f2937;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+html.dark .matrix-cell-input:hover:not(:focus) {
+    border-color: #6366f1;
+}
+
+/* 向量输入 */
+html.dark .vector-cell-input {
+    background: #374151;
+    border-color: #4b5563;
+    color: #e5e7eb;
+}
+
+html.dark .vector-cell-input:focus {
+    background: #1f2937;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+html.dark .vector-cell-input:hover:not(:focus) {
+    border-color: #6366f1;
+}
+
+/* 结果矩阵/向量单元格 */
+html.dark .result-matrix-cell {
+    color: #93c5fd;
+    background: #1e293b;
+    border-color: #334155;
+}
+
+html.dark .result-vector-cell {
+    color: #93c5fd;
+    background: #1e293b;
+    border-color: #334155;
+}
+
+/* 表单控件 */
+html.dark input[type="number"],
+html.dark input[type="text"] {
+    background: #374151;
+    border-color: #4b5563;
+    color: #e5e7eb;
+}
+
+html.dark input[type="number"]:focus,
+html.dark input[type="text"]:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+html.dark select {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #e5e7eb;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+}
+
+html.dark select option {
+    background-color: #374151;
+    color: #e5e7eb;
+}
+
+/* 计算步骤 */
+html.dark .step-item {
+    border-left-color: #374151;
+}
+
+html.dark .step-item:last-child {
+    border-left-color: transparent;
+}
+
+html.dark .step-content {
+    color: #d1d5db;
+}
+
+/* 历史记录 */
+html.dark .history-item {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+html.dark .history-item:hover {
+    border-color: #4f46e5;
+    background: #1e293b;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+html.dark .history-item-type {
+    color: #f3f4f6;
+}
+
+html.dark .history-item-time {
+    color: #6b7280;
+}
+
+html.dark .history-item-result {
+    color: #9ca3af;
+}
+
+/* tab-section 分隔线 */
+html.dark .tab-section {
+    border-bottom-color: #374151;
+}
+
+/* label 通用文字颜色 */
+html.dark .tab-section label {
+    color: #d1d5db;
+}
+
+html.dark .tab-section label.text-sm {
+    color: #9ca3af;
+}
+
+/* 提示文字 */
+html.dark .text-gray-400 {
+    color: #6b7280;
+}
+
+html.dark .text-gray-500 {
+    color: #9ca3af;
+}
+
+/* 滚动条 */
+html.dark ::-webkit-scrollbar-track {
+    background: #1f2937;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+    background: #4b5563;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+/* 空状态 */
+html.dark .empty-state {
+    color: #6b7280;
+}
+
+html.dark .empty-state i {
+    color: #4b5563;
+}
+
+/* 按钮调整（深色模式下按钮保持不变，已经是自定义背景色） */
+
+/* 二次型提示文字 */
+html.dark #quadratic-form-tab .text-sm.text-gray-400 {
+    color: #6b7280;
+}
