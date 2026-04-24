@@ -57,8 +57,15 @@
         <!-- 标题区域 -->
         <header class="mb-8 relative">
             <div class="text-center">
-                <h1 class="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-2">线性代数计算器</h1>
+                <h1 class="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-2" data-i18n-key="title">线性代数计算器</h1>
             </div>
+            <!-- 语言切换按钮 -->
+            <button id="language-toggle" type="button"
+               class="absolute top-1 right-20 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+               title="切换语言" aria-label="切换中英文语言">
+                <span class="lang-text">EN/中</span>
+            </button>
+            
             <!-- 主题切换按钮 -->
             <button id="theme-toggle" type="button"
                class="absolute top-1 right-10 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -80,7 +87,7 @@
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                 </svg>
             </button>
-            <a href="https://github.com/lyrumu" target="_blank" rel="noopener noreferrer"
+            <a href="https://github.com/lyrumu/liner_algebra_calculator" target="_blank" rel="noopener noreferrer"
                class="absolute top-1 right-0 text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-200 p-1"
                title="GitHub" aria-label="访问我的 GitHub 主页">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 16 16" fill="currentColor">
@@ -92,13 +99,13 @@
         <!-- 导航栏 -->
         <nav class="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 mb-8 overflow-x-auto">
             <ul class="flex space-x-1 p-1.5" id="nav-tabs">
-                <li><button class="nav-item active" data-tab="determinant">行列式</button></li>
-                <li><button class="nav-item" data-tab="matrix">矩阵运算</button></li>
-                <li><button class="nav-item" data-tab="vector">向量运算</button></li>
-                <li><button class="nav-item" data-tab="linear-system">线性方程组</button></li>
-                <li><button class="nav-item" data-tab="vector-group">向量组</button></li>
-                <li><button class="nav-item" data-tab="quadratic-form">二次型</button></li>
-                <li><button class="nav-item" data-tab="history">历史记录</button></li>
+                <li><button class="nav-item active" data-tab="determinant" data-i18n-key="determinant">行列式</button></li>
+                <li><button class="nav-item" data-tab="matrix" data-i18n-key="matrix">矩阵运算</button></li>
+                <li><button class="nav-item" data-tab="vector" data-i18n-key="vector">向量运算</button></li>
+                <li><button class="nav-item" data-tab="linear-system" data-i18n-key="linear-system">线性方程组</button></li>
+                <li><button class="nav-item" data-tab="vector-group" data-i18n-key="vector-group">向量组</button></li>
+                <li><button class="nav-item" data-tab="quadratic-form" data-i18n-key="quadratic-form">二次型</button></li>
+                <li><button class="nav-item" data-tab="history" data-i18n-key="history">历史记录</button></li>
             </ul>
         </nav>
 
@@ -112,30 +119,30 @@
                     <div id="determinant-tab" class="tab-content">
                         <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
                             <i class="fa fa-th text-primary"></i>
-                            行列式计算
+                            <span data-i18n-key="calculate-determinant">计算行列式</span>
                         </h2>
                         <div class="tab-section">
-                            <label class="block text-gray-700 mb-3 font-medium">矩阵维度</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="matrix-dimensions">矩阵维度</label>
                             <div class="flex items-center gap-4">
                                 <div>
-                                    <label for="det-rows" class="block text-sm text-gray-500 mb-1">行数</label>
+                                    <label for="det-rows" class="block text-sm text-gray-500 mb-1" data-i18n-key="rows">行数</label>
                                     <input type="number" id="det-rows" min="1" max="10" value="3" class="w-20 px-3 py-2 border border-gray-300 rounded-lg text-center font-mono focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
                                 <span class="text-gray-400 text-xl mt-5">×</span>
                                 <div>
-                                    <label for="det-cols" class="block text-sm text-gray-500 mb-1">列数</label>
+                                    <label for="det-cols" class="block text-sm text-gray-500 mb-1" data-i18n-key="cols">列数</label>
                                     <input type="number" id="det-cols" min="1" max="10" value="3" class="w-20 px-3 py-2 border border-gray-300 rounded-lg text-center font-mono focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
-                                <button id="det-resize" class="btn-primary mt-5">生成</button>
+                                <button id="det-resize" class="btn-primary mt-5" data-i18n-key="generate">生成</button>
                             </div>
                         </div>
                         <div class="tab-section">
-                            <label class="block text-gray-700 mb-3 font-medium">矩阵元素</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="matrix-elements">矩阵元素</label>
                             <div id="det-matrix-container" class="flex justify-center overflow-x-auto py-2"></div>
                         </div>
                         <div class="flex gap-3">
                             <button id="det-calculate" class="btn-primary flex-1 py-3 text-lg">
-                                <i class="fa fa-calculator mr-2"></i>计算行列式
+                                <i class="fa fa-calculator mr-2"></i><span data-i18n-key="calculate-determinant">计算行列式</span>
                             </button>
                             <button id="det-clear" class="btn-secondary px-6 py-3">
                                 <i class="fa fa-refresh"></i>
@@ -147,66 +154,66 @@
                     <div id="matrix-tab" class="tab-content hidden">
                         <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
                             <i class="fa fa-th-large text-primary"></i>
-                            矩阵运算
+                            <span data-i18n-key="matrix">矩阵运算</span>
                         </h2>
                         <div class="tab-section">
-                            <label class="block text-gray-700 mb-3 font-medium">运算类型</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="matrix-operation">运算类型</label>
                             <select id="matrix-operation" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white">
-                                <option value="add">矩阵加法 (A + B)</option>
-                                <option value="subtract">矩阵减法 (A − B)</option>
-                                <option value="multiply">矩阵乘法 (A × B)</option>
-                                <option value="scalar-multiply">数乘矩阵 (k × A)</option>
-                                <option value="transpose">矩阵转置 (Aᵀ)</option>
-                                <option value="inverse">矩阵求逆 (A⁻¹)</option>
-                                <option value="adjugate">伴随矩阵 (adj(A))</option>
-                                <option value="rank">矩阵的秩 (rank(A))</option>
-                                <option value="trace">矩阵的迹 (tr(A))</option>
-                                <option value="eigen">特征值和特征向量</option>
+                                <option value="add" data-i18n-key="add">矩阵加法 (A + B)</option>
+                                <option value="subtract" data-i18n-key="subtract">矩阵减法 (A − B)</option>
+                                <option value="multiply" data-i18n-key="multiply">矩阵乘法 (A × B)</option>
+                                <option value="scalar-multiply" data-i18n-key="scalar-multiply">数乘矩阵 (k × A)</option>
+                                <option value="transpose" data-i18n-key="transpose">矩阵转置 (Aᵀ)</option>
+                                <option value="inverse" data-i18n-key="inverse">矩阵求逆 (A⁻¹)</option>
+                                <option value="adjugate" data-i18n-key="adjugate">伴随矩阵 (adj(A))</option>
+                                <option value="rank" data-i18n-key="rank">矩阵的秩 (rank(A))</option>
+                                <option value="trace" data-i18n-key="trace">矩阵的迹 (tr(A))</option>
+                                <option value="eigen" data-i18n-key="eigen">特征值和特征向量</option>
                             </select>
                         </div>
                         
                         <div class="tab-section">
-                            <label class="block text-gray-700 mb-3 font-medium">矩阵 A</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="matrix-a">矩阵 A</label>
                             <div class="flex items-center gap-4 mb-3">
                                 <div>
-                                    <label for="mat-a-rows" class="block text-sm text-gray-500 mb-1">行数</label>
+                                    <label for="mat-a-rows" class="block text-sm text-gray-500 mb-1" data-i18n-key="rows">行数</label>
                                     <input type="number" id="mat-a-rows" min="1" max="10" value="2" class="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center font-mono focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
                                 <span class="text-gray-400 text-xl mt-5">×</span>
                                 <div>
-                                    <label for="mat-a-cols" class="block text-sm text-gray-500 mb-1">列数</label>
+                                    <label for="mat-a-cols" class="block text-sm text-gray-500 mb-1" data-i18n-key="cols">列数</label>
                                     <input type="number" id="mat-a-cols" min="1" max="10" value="2" class="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center font-mono focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
-                                <button id="mat-a-resize" class="btn-primary mt-5">生成</button>
+                                <button id="mat-a-resize" class="btn-primary mt-5" data-i18n-key="generate">生成</button>
                             </div>
                             <div id="mat-a-container" class="flex justify-center overflow-x-auto py-2"></div>
                         </div>
                         
                         <div id="matrix-b-section" class="tab-section hidden">
-                            <label class="block text-gray-700 mb-3 font-medium">矩阵 B</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="matrix-b">矩阵 B</label>
                             <div class="flex items-center gap-4 mb-3">
                                 <div>
-                                    <label for="mat-b-rows" class="block text-sm text-gray-500 mb-1">行数</label>
+                                    <label for="mat-b-rows" class="block text-sm text-gray-500 mb-1" data-i18n-key="rows">行数</label>
                                     <input type="number" id="mat-b-rows" min="1" max="10" value="2" class="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center font-mono focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
                                 <span class="text-gray-400 text-xl mt-5">×</span>
                                 <div>
-                                    <label for="mat-b-cols" class="block text-sm text-gray-500 mb-1">列数</label>
+                                    <label for="mat-b-cols" class="block text-sm text-gray-500 mb-1" data-i18n-key="cols">列数</label>
                                     <input type="number" id="mat-b-cols" min="1" max="10" value="2" class="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center font-mono focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
-                                <button id="mat-b-resize" class="btn-primary mt-5">生成</button>
+                                <button id="mat-b-resize" class="btn-primary mt-5" data-i18n-key="generate">生成</button>
                             </div>
                             <div id="mat-b-container" class="flex justify-center overflow-x-auto py-2"></div>
                         </div>
                         
                         <div id="scalar-section" class="tab-section hidden">
-                            <label for="scalar-value" class="block text-gray-700 mb-3 font-medium">标量值 k</label>
+                            <label for="scalar-value" class="block text-gray-700 mb-3 font-medium" data-i18n-key="scalar-value">标量值 k</label>
                             <input type="number" id="scalar-value" step="any" value="2" class="w-40 px-4 py-3 border border-gray-300 rounded-lg font-mono text-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                         </div>
                         
                         <div class="flex gap-3">
                             <button id="matrix-calculate" class="btn-primary flex-1 py-3 text-lg">
-                                <i class="fa fa-calculator mr-2"></i>计算
+                                <i class="fa fa-calculator mr-2"></i><span data-i18n-key="calculate">计算</span>
                             </button>
                             <button id="matrix-clear" class="btn-secondary px-6 py-3">
                                 <i class="fa fa-refresh"></i>
@@ -218,54 +225,54 @@
                     <div id="vector-tab" class="tab-content hidden">
                         <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
                             <i class="fa fa-arrows text-primary"></i>
-                            向量运算
+                            <span data-i18n-key="vector">向量运算</span>
                         </h2>
                         <div class="tab-section">
-                            <label class="block text-gray-700 mb-3 font-medium">运算类型</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="vector-operation">运算类型</label>
                             <select id="vector-operation" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white">
-                                <option value="add">向量加法 (u + v)</option>
-                                <option value="subtract">向量减法 (u − v)</option>
-                                <option value="scalar-multiply">数乘向量 (k × u)</option>
-                                <option value="dot-product">点积 (u · v)</option>
-                                <option value="cross-product">叉积 (u × v)</option>
-                                <option value="length">向量长度 (‖u‖)</option>
-                                <option value="angle">向量夹角 (θ)</option>
-                                <option value="orthogonality">正交性检验</option>
+                                <option value="add" data-i18n-key="vector-add">向量加法 (u + v)</option>
+                                <option value="subtract" data-i18n-key="vector-subtract">向量减法 (u − v)</option>
+                                <option value="scalar-multiply" data-i18n-key="vector-scalar-multiply">数乘向量 (k × u)</option>
+                                <option value="dot-product" data-i18n-key="dot-product">点积 (u · v)</option>
+                                <option value="cross-product" data-i18n-key="cross-product">叉积 (u × v)</option>
+                                <option value="length" data-i18n-key="length">向量长度 (‖u‖)</option>
+                                <option value="angle" data-i18n-key="angle">向量夹角 (θ)</option>
+                                <option value="orthogonality" data-i18n-key="orthogonality">正交性检验</option>
                             </select>
                         </div>
                         
                         <div class="tab-section">
-                            <label class="block text-gray-700 mb-3 font-medium">向量 u</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="vector-u">向量 u</label>
                             <div class="flex items-center gap-4 mb-3">
                                 <div>
-                                    <label for="vec-u-length" class="block text-sm text-gray-500 mb-1">维度</label>
+                                    <label for="vec-u-length" class="block text-sm text-gray-500 mb-1" data-i18n-key="dimension">维度</label>
                                     <input type="number" id="vec-u-length" min="1" max="10" value="3" class="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center font-mono focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
-                                <button id="vec-u-resize" class="btn-primary mt-5">生成</button>
+                                <button id="vec-u-resize" class="btn-primary mt-5" data-i18n-key="generate">生成</button>
                             </div>
                             <div id="vec-u-container" class="flex justify-center overflow-x-auto py-2"></div>
                         </div>
                         
                         <div id="vector-v-section" class="tab-section hidden">
-                            <label class="block text-gray-700 mb-3 font-medium">向量 v</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="vector-v">向量 v</label>
                             <div class="flex items-center gap-4 mb-3">
                                 <div>
-                                    <label for="vec-v-length" class="block text-sm text-gray-500 mb-1">维度</label>
+                                    <label for="vec-v-length" class="block text-sm text-gray-500 mb-1" data-i18n-key="dimension">维度</label>
                                     <input type="number" id="vec-v-length" min="1" max="10" value="3" class="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center font-mono focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
-                                <button id="vec-v-resize" class="btn-primary mt-5">生成</button>
+                                <button id="vec-v-resize" class="btn-primary mt-5" data-i18n-key="generate">生成</button>
                             </div>
                             <div id="vec-v-container" class="flex justify-center overflow-x-auto py-2"></div>
                         </div>
                         
                         <div id="vec-scalar-section" class="tab-section hidden">
-                            <label for="vec-scalar-value" class="block text-gray-700 mb-3 font-medium">标量值 k</label>
+                            <label for="vec-scalar-value" class="block text-gray-700 mb-3 font-medium" data-i18n-key="scalar-value">标量值 k</label>
                             <input type="number" id="vec-scalar-value" step="any" value="2" class="w-40 px-4 py-3 border border-gray-300 rounded-lg font-mono text-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                         </div>
                         
                         <div class="flex gap-3">
                             <button id="vector-calculate" class="btn-primary flex-1 py-3 text-lg">
-                                <i class="fa fa-calculator mr-2"></i>计算
+                                <i class="fa fa-calculator mr-2"></i><span data-i18n-key="calculate">计算</span>
                             </button>
                             <button id="vector-clear" class="btn-secondary px-6 py-3">
                                 <i class="fa fa-refresh"></i>
@@ -277,47 +284,47 @@
                     <div id="linear-system-tab" class="tab-content hidden">
                         <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
                             <i class="fa fa-superscript text-primary"></i>
-                            线性方程组求解
+                            <span data-i18n-key="linear-system-solving">线性方程组求解</span>
                         </h2>
                         <div class="tab-section">
-                            <label class="block text-gray-700 mb-3 font-medium">求解方法</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="solution-method">求解方法</label>
                             <select id="system-method" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white">
-                                <option value="gauss">高斯消元法</option>
-                                <option value="lu">LU分解法</option>
-                                <option value="basis-solution">基础解系</option>
-                                <option value="general-solution">通解</option>
+                                <option value="gauss" data-i18n-key="gauss">高斯消元法</option>
+                                <option value="lu" data-i18n-key="lu">LU分解法</option>
+                                <option value="basis-solution" data-i18n-key="basis-solution">基础解系</option>
+                                <option value="general-solution" data-i18n-key="general-solution">通解</option>
                             </select>
                         </div>
                         
                         <div class="tab-section">
-                            <label class="block text-gray-700 mb-3 font-medium">方程组维度</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="system-dimensions">方程组维度</label>
                             <div class="flex items-center gap-4">
                                 <div>
-                                    <label for="sys-equations" class="block text-sm text-gray-500 mb-1">方程数</label>
+                                    <label for="sys-equations" class="block text-sm text-gray-500 mb-1" data-i18n-key="equations">方程数</label>
                                     <input type="number" id="sys-equations" min="1" max="10" value="3" class="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center font-mono focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
                                 <span class="text-gray-400 text-xl mt-5">×</span>
                                 <div>
-                                    <label for="sys-variables" class="block text-sm text-gray-500 mb-1">变量数</label>
+                                    <label for="sys-variables" class="block text-sm text-gray-500 mb-1" data-i18n-key="variables">变量数</label>
                                     <input type="number" id="sys-variables" min="1" max="10" value="3" class="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center font-mono focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
-                                <button id="sys-resize" class="btn-primary mt-5">生成</button>
+                                <button id="sys-resize" class="btn-primary mt-5" data-i18n-key="generate">生成</button>
                             </div>
                         </div>
                         
                         <div class="tab-section">
-                            <label class="block text-gray-700 mb-3 font-medium">系数矩阵</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="coefficient-matrix">系数矩阵</label>
                             <div id="sys-coefficients-container" class="flex justify-center overflow-x-auto py-2"></div>
                         </div>
                         
                         <div class="tab-section">
-                            <label class="block text-gray-700 mb-3 font-medium">常数项向量 b</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="constant-vector">常数项向量 b</label>
                             <div id="sys-constants-container" class="flex justify-center overflow-x-auto py-2"></div>
                         </div>
                         
                         <div class="flex gap-3">
                             <button id="system-calculate" class="btn-primary flex-1 py-3 text-lg">
-                                <i class="fa fa-calculator mr-2"></i>求解
+                                <i class="fa fa-calculator mr-2"></i><span data-i18n-key="solve">求解</span>
                             </button>
                             <button id="system-clear" class="btn-secondary px-6 py-3">
                                 <i class="fa fa-refresh"></i>
@@ -329,42 +336,42 @@
                     <div id="vector-group-tab" class="tab-content hidden">
                         <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
                             <i class="fa fa-share-alt text-primary"></i>
-                            向量组分析
+                            <span data-i18n-key="vector-group-analysis">向量组分析</span>
                         </h2>
                         <div class="tab-section">
-                            <label class="block text-gray-700 mb-3 font-medium">分析类型</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="analysis-type">分析类型</label>
                             <select id="vector-group-operation" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white">
-                                <option value="linear-dependency">线性相关性判断</option>
-                                <option value="max-independent">极大无关组</option>
-                                <option value="rank">向量组的秩</option>
-                                <option value="schmidt">施密特正交化</option>
+                                <option value="linear-dependency" data-i18n-key="linear-dependency">线性相关性判断</option>
+                                <option value="max-independent" data-i18n-key="max-independent">极大无关组</option>
+                                <option value="rank" data-i18n-key="group-rank">向量组的秩</option>
+                                <option value="schmidt" data-i18n-key="schmidt">施密特正交化</option>
                             </select>
                         </div>
                         
                         <div class="tab-section">
-                            <label class="block text-gray-700 mb-3 font-medium">向量组设置</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="vector-group-settings">向量组设置</label>
                             <div class="flex items-center gap-4">
                                 <div>
-                                    <label for="vg-vectors" class="block text-sm text-gray-500 mb-1">向量个数</label>
+                                    <label for="vg-vectors" class="block text-sm text-gray-500 mb-1" data-i18n-key="vector-count">向量个数</label>
                                     <input type="number" id="vg-vectors" min="1" max="10" value="3" class="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center font-mono focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
                                 <span class="text-gray-400 text-xl mt-5">×</span>
                                 <div>
-                                    <label for="vg-dimension" class="block text-sm text-gray-500 mb-1">向量维度</label>
+                                    <label for="vg-dimension" class="block text-sm text-gray-500 mb-1" data-i18n-key="vector-dimension">向量维度</label>
                                     <input type="number" id="vg-dimension" min="1" max="10" value="3" class="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center font-mono focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
-                                <button id="vg-resize" class="btn-primary mt-5">生成</button>
+                                <button id="vg-resize" class="btn-primary mt-5" data-i18n-key="generate">生成</button>
                             </div>
                         </div>
                         
                         <div class="tab-section">
-                            <label class="block text-gray-700 mb-3 font-medium">向量组</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="vector-group">向量组</label>
                             <div id="vector-group-container" class="space-y-2"></div>
                         </div>
                         
                         <div class="flex gap-3">
                             <button id="vector-group-calculate" class="btn-primary flex-1 py-3 text-lg">
-                                <i class="fa fa-calculator mr-2"></i>分析
+                                <i class="fa fa-calculator mr-2"></i><span data-i18n-key="analyze">分析</span>
                             </button>
                             <button id="vector-group-clear" class="btn-secondary px-6 py-3">
                                 <i class="fa fa-refresh"></i>
@@ -376,35 +383,35 @@
                     <div id="quadratic-form-tab" class="tab-content hidden">
                         <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
                             <i class="fa fa-line-chart text-primary"></i>
-                            二次型分析
+                            <span data-i18n-key="quadratic-form-analysis">二次型分析</span>
                         </h2>
                         <div class="tab-section">
-                            <label class="block text-gray-700 mb-3 font-medium">分析类型</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="quadratic-operation">分析类型</label>
                             <select id="quadratic-operation" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white">
-                                <option value="standard-form">标准形（正交变换法）</option>
-                                <option value="canonical-form">规范形</option>
-                                <option value="positive-definite">正定性判断</option>
+                                <option value="standard-form" data-i18n-key="standard-form">标准形（正交变换法）</option>
+                                <option value="canonical-form" data-i18n-key="canonical-form">规范形</option>
+                                <option value="positive-definite" data-i18n-key="positive-definite">正定性判断</option>
                             </select>
                         </div>
                         
                         <div class="tab-section">
-                            <label class="block text-gray-700 mb-3 font-medium">二次型矩阵</label>
+                            <label class="block text-gray-700 mb-3 font-medium" data-i18n-key="quadratic-matrix">二次型矩阵</label>
                             <div class="flex items-center gap-4 mb-3">
                                 <div>
-                                    <label for="qf-dimension" class="block text-sm text-gray-500 mb-1">维度</label>
+                                    <label for="qf-dimension" class="block text-sm text-gray-500 mb-1" data-i18n-key="dimension">维度</label>
                                     <input type="number" id="qf-dimension" min="1" max="10" value="3" class="w-16 px-2 py-2 border border-gray-300 rounded-lg text-center font-mono focus:ring-2 focus:ring-primary focus:border-transparent">
                                 </div>
-                                <button id="qf-resize" class="btn-primary mt-5">生成</button>
+                                <button id="qf-resize" class="btn-primary mt-5" data-i18n-key="generate">生成</button>
                             </div>
                             <div id="qf-matrix-container" class="flex justify-center overflow-x-auto py-2"></div>
                             <p class="text-sm text-gray-400 mt-2">
-                                <i class="fa fa-info-circle mr-1"></i>请输入对称矩阵，非对角线元素会自动对称化
+                                <i class="fa fa-info-circle mr-1"></i><span data-i18n-key="symmetric-note">请输入对称矩阵，非对角线元素会自动对称化</span>
                             </p>
                         </div>
                         
                         <div class="flex gap-3">
                             <button id="quadratic-calculate" class="btn-primary flex-1 py-3 text-lg">
-                                <i class="fa fa-calculator mr-2"></i>分析
+                                <i class="fa fa-calculator mr-2"></i><span data-i18n-key="analyze">分析</span>
                             </button>
                             <button id="quadratic-clear" class="btn-secondary px-6 py-3">
                                 <i class="fa fa-refresh"></i>
@@ -416,12 +423,12 @@
                     <div id="history-tab" class="tab-content hidden">
                         <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
                             <i class="fa fa-history text-primary"></i>
-                            历史记录
+                            <span data-i18n-key="history-records">历史记录</span>
                         </h2>
                         <div class="flex justify-between items-center mb-4">
-                            <p class="text-sm text-gray-500 dark:text-gray-400">点击记录可快速加载</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400" data-i18n-key="click-to-load">点击记录可快速加载</p>
                             <button id="clear-history" class="btn-secondary text-sm px-4 py-2">
-                                <i class="fa fa-trash-o mr-1"></i>清空
+                                <i class="fa fa-trash-o mr-1"></i><span data-i18n-key="clear">清空</span>
                             </button>
                         </div>
                         <div id="history-list" class="max-h-[500px] overflow-y-auto pr-1">
@@ -436,13 +443,13 @@
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6 sticky top-6">
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
                         <i class="fa fa-check-circle text-primary"></i>
-                        计算结果
+                        <span data-i18n-key="calculation-result">计算结果</span>
                     </h2>
                     <div id="result-container" class="min-h-[200px]">
                         <div class="flex flex-col items-center justify-center h-48 text-gray-400 dark:text-gray-500">
                             <i class="fa fa-calculator text-5xl mb-4 opacity-30"></i>
-                            <p class="text-lg dark:text-gray-400">请在左侧输入数据并点击计算按钮</p>
-                            <p class="text-sm mt-1 opacity-60 dark:text-gray-500">支持分数输入，如 1/2, 3_1/2（带分数）</p>
+                            <p class="text-lg dark:text-gray-400" data-i18n-key="no-data">请在左侧输入数据并点击计算按钮</p>
+                            <p class="text-sm mt-1 opacity-60 dark:text-gray-500" data-i18n-key="fraction-hint">支持分数输入，如 1/2, 3_1/2（带分数）</p>
                         </div>
                     </div>
                     
@@ -450,10 +457,10 @@
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                                 <i class="fa fa-list-ol text-primary"></i>
-                                计算过程
+                                <span data-i18n-key="calculation-process">计算过程</span>
                             </h3>
                             <button id="toggle-steps" class="text-primary hover:text-blue-700 dark:hover:text-blue-400 text-sm flex items-center font-medium transition-colors">
-                                <span>显示步骤</span>
+                                <span data-i18n-key="show-steps">显示步骤</span>
                                 <i class="fa fa-chevron-down ml-1"></i>
                             </button>
                         </div>
@@ -469,7 +476,7 @@
     <!-- 页脚 -->
     <footer class="bg-gray-800 dark:bg-gray-950 text-gray-300 py-8 mt-12">
         <div class="container mx-auto px-4 text-center">
-            <p class="text-lg font-medium">线性代数计算器</p>
+            <p class="text-lg font-medium" data-i18n-key="footer-title">线性代数计算器</p>
             <div class="mt-3 text-xs text-gray-600 dark:text-gray-500">
                 <span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv"></span> 次</span>
                 <span class="mx-2">·</span>
@@ -491,7 +498,24 @@
         })();
     </script>
 
+    <!-- 语言切换逻辑 -->
+    <script>
+        (function() {
+            const toggle = document.getElementById('language-toggle');
+            if (!toggle) return;
+            
+            toggle.addEventListener('click', function() {
+                if (window.i18n && typeof window.i18n.toggleLanguage === 'function') {
+                    window.i18n.toggleLanguage();
+                } else {
+                    console.error('i18n not loaded');
+                }
+            });
+        })();
+    </script>
+
     <!-- JavaScript文件（按依赖顺序加载）-->
+    <script src="js/i18n.js"></script>
     <script src="js/fraction.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/math-core.js"></script>
