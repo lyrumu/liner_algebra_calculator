@@ -283,18 +283,19 @@ function showResult(content) {
  */
 function getOperationName(operation) {
     const names = {
-        'add': '加法', 'subtract': '减法', 'multiply': '乘法',
-        'scalar-multiply': '数乘', 'transpose': '转置', 'inverse': '求逆',
-        'adjugate': '伴随矩阵', 'rank': '秩', 'trace': '迹',
-        'eigen': '特征值和特征向量', 'dot-product': '点积',
-        'cross-product': '叉积', 'length': '长度', 'angle': '夹角',
-        'orthogonality': '正交性检验', 'linear-dependency': '线性相关性',
-        'max-independent': '极大无关组', 'schmidt': '施密特正交化',
-        'standard-form': '标准形', 'canonical-form': '规范形',
-        'positive-definite': '正定性', 'gauss': '高斯消元法',
-        'lu': 'LU分解', 'basis-solution': '基础解系', 'general-solution': '通解'
+        'add': 'op-add', 'subtract': 'op-subtract', 'multiply': 'op-multiply',
+        'scalar-multiply': 'op-scalar-multiply', 'transpose': 'op-transpose', 'inverse': 'op-inverse',
+        'adjugate': 'op-adjugate', 'rank': 'op-rank', 'trace': 'op-trace',
+        'eigen': 'op-eigen', 'dot-product': 'op-dot-product',
+        'cross-product': 'op-cross-product', 'length': 'op-length', 'angle': 'op-angle',
+        'orthogonality': 'op-orthogonality', 'linear-dependency': 'op-linear-dependency',
+        'max-independent': 'op-max-independent', 'schmidt': 'op-schmidt',
+        'standard-form': 'op-standard-form', 'canonical-form': 'op-canonical-form',
+        'positive-definite': 'op-positive-definite', 'gauss': 'op-gauss',
+        'lu': 'op-lu', 'basis-solution': 'op-basis-solution', 'general-solution': 'op-general-solution'
     };
-    return names[operation] || operation;
+    const key = names[operation] || operation;
+    return (typeof window !== 'undefined' && window.i18n) ? window.i18n.t(key) : key;
 }
 
 /**
@@ -306,7 +307,7 @@ function addToHistory(type, input, result) {
         type,
         input,
         result,
-        timestamp: new Date().toLocaleString('zh-CN')
+        timestamp: new Date().toLocaleString(navigator.language)
     };
     calculationHistory.unshift(historyItem);
     if (calculationHistory.length > 50) calculationHistory.pop();
@@ -325,7 +326,7 @@ function updateHistoryDisplay() {
     historyList.innerHTML = '';
 
     if (calculationHistory.length === 0) {
-        historyList.innerHTML = '<p class="text-gray-400 text-center py-8">暂无历史记录</p>';
+        historyList.innerHTML = `<p class="text-gray-400 text-center py-8">${window.i18n ? window.i18n.t('history-no-history') : '暂无历史记录'}</p>`;
         return;
     }
 
@@ -336,17 +337,17 @@ function updateHistoryDisplay() {
         let inputDisplay = '';
         switch (item.type) {
             case 'determinant':
-                inputDisplay = `行列式 (${item.input.rows}×${item.input.cols})`; break;
+                inputDisplay = window.i18n ? window.i18n.tf('history-determinant', { rows: item.input.rows, cols: item.input.cols }) : `行列式 (${item.input.rows}×${item.input.cols})`; break;
             case 'matrix-operation':
-                inputDisplay = `矩阵 ${getOperationName(item.input.operation)}`; break;
+                inputDisplay = window.i18n ? window.i18n.tf('history-matrix-op', { op: getOperationName(item.input.operation) }) : `矩阵 ${getOperationName(item.input.operation)}`; break;
             case 'vector-operation':
-                inputDisplay = `向量 ${getOperationName(item.input.operation)}`; break;
+                inputDisplay = window.i18n ? window.i18n.tf('history-vector-op', { op: getOperationName(item.input.operation) }) : `向量 ${getOperationName(item.input.operation)}`; break;
             case 'linear-system':
-                inputDisplay = `线性方程组 (${getOperationName(item.input.method)})`; break;
+                inputDisplay = window.i18n ? window.i18n.tf('history-linear-system', { method: getOperationName(item.input.method) }) : `线性方程组 (${getOperationName(item.input.method)})`; break;
             case 'vector-group':
-                inputDisplay = `向量组 ${getOperationName(item.input.operation)}`; break;
+                inputDisplay = window.i18n ? window.i18n.tf('history-vector-group', { op: getOperationName(item.input.operation) }) : `向量组 ${getOperationName(item.input.operation)}`; break;
             case 'quadratic-form':
-                inputDisplay = `二次型 ${getOperationName(item.input.operation)}`; break;
+                inputDisplay = window.i18n ? window.i18n.tf('history-quadratic-form', { op: getOperationName(item.input.operation) }) : `二次型 ${getOperationName(item.input.operation)}`; break;
             default:
                 inputDisplay = item.type;
         }

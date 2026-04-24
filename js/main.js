@@ -44,7 +44,7 @@ function init() {
     handleMatrixOperationChange();
     handleVectorOperationChange();
     
-    console.log('线性代数计算器初始化完成');
+    console.log(window.i18n ? window.i18n.t('init-complete') : '线性代数计算器初始化完成');
 }
 
 // 页面加载完成后初始化

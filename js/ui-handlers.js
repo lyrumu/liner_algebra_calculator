@@ -3,6 +3,10 @@
  * 包含所有标签页的交互逻辑和计算触发器
  */
 
+// i18n 辅助函数
+function t(key) { return (typeof window !== 'undefined' && window.i18n) ? window.i18n.t(key) : key; }
+function tf(key, params) { return (typeof window !== 'undefined' && window.i18n) ? window.i18n.tf(key, params) : key; }
+
 // ==================== 行列式计算 ====================
 
 function handleDeterminantCalculate() {
@@ -11,18 +15,18 @@ function handleDeterminantCalculate() {
         const cols = parseInt(document.getElementById('det-cols').value) || 3;
         
         if (rows !== cols) {
-            throw new Error('行列式计算要求矩阵必须是方阵');
+            throw new Error(t('error-square-matrix'));
         }
         
         if (rows < 1 || rows > 10 || cols < 1 || cols > 10) {
-            throw new Error('矩阵维度必须在1-10之间');
+            throw new Error(t('error-dim-range'));
         }
         
         const matrix = getMatrixFromInput('det-matrix-container', rows, cols);
         
         clearSteps('steps-container');
         
-        addStep(`<p>输入矩阵 A（${rows}×${cols}）：</p><div id="step-matrix"></div>`, 'steps-container');
+        addStep(`<p>${tf('step-input-matrix', { rows, cols })}</p><div id="step-matrix"></div>`, 'steps-container');
         displayMatrix(matrix, 'step-matrix');
         
         const result = determinant(matrix);
@@ -31,12 +35,12 @@ function handleDeterminantCalculate() {
         
         showResult(`
             <div class="result-card">
-                <h3 class="text-lg font-semibold text-gray-800 mb-3">行列式计算结果</h3>
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-determinant')}</h3>
                 <p class="text-3xl font-bold text-primary text-center">${formatNumber(result)}</p>
             </div>
         `);
         
-        addToHistory('determinant', { rows, cols, matrix }, `行列式 = ${formatNumber(result)}`);
+        addToHistory('determinant', { rows, cols, matrix }, `${t('calculate-determinant')} = ${formatNumber(result)}`);
         
     } catch (error) {
         showError(error.message);
@@ -73,12 +77,12 @@ function handleMatrixCalculate() {
         const matrixA = getMatrixFromInput('mat-a-container', rowsA, colsA);
         
         if (rowsA < 1 || rowsA > 10 || colsA < 1 || colsA > 10) {
-            throw new Error('矩阵维度必须在1-10之间');
+            throw new Error(t('error-dim-range'));
         }
         
         clearSteps('steps-container');
         
-        addStep(`<p>矩阵 A（${rowsA}×${colsA}）：</p><div id="step-matrix-a"></div>`, 'steps-container');
+        addStep(`<p>${tf('step-matrix-a', { rows: rowsA, cols: colsA })}</p><div id="step-matrix-a"></div>`, 'steps-container');
         displayMatrix(matrixA, 'step-matrix-a');
         
         let result, historyInput = { operation, matrixA };
@@ -89,7 +93,7 @@ function handleMatrixCalculate() {
                 const colsB = parseInt(document.getElementById('mat-b-cols').value) || 2;
                 const matrixB = getMatrixFromInput('mat-b-container', rowsB, colsB);
                 
-                addStep(`<p>矩阵 B（${rowsB}×${colsB}）：</p><div id="step-matrix-b"></div>`, 'steps-container');
+                addStep(`<p>${tf('step-matrix-b', { rows: rowsB, cols: colsB })}</p><div id="step-matrix-b"></div>`, 'steps-container');
                 displayMatrix(matrixB, 'step-matrix-b');
                 
                 result = addMatrices(matrixA, matrixB);
@@ -105,7 +109,7 @@ function handleMatrixCalculate() {
                 const colsB = parseInt(document.getElementById('mat-b-cols').value) || 2;
                 const matrixB = getMatrixFromInput('mat-b-container', rowsB, colsB);
                 
-                addStep(`<p>矩阵 B（${rowsB}×${colsB}）：</p><div id="step-matrix-b"></div>`, 'steps-container');
+                addStep(`<p>${tf('step-matrix-b', { rows: rowsB, cols: colsB })}</p><div id="step-matrix-b"></div>`, 'steps-container');
                 displayMatrix(matrixB, 'step-matrix-b');
                 
                 result = subtractMatrices(matrixA, matrixB);
@@ -121,7 +125,7 @@ function handleMatrixCalculate() {
                 const colsB = parseInt(document.getElementById('mat-b-cols').value) || 2;
                 const matrixB = getMatrixFromInput('mat-b-container', rowsB, colsB);
                 
-                addStep(`<p>矩阵 B（${rowsB}×${colsB}）：</p><div id="step-matrix-b"></div>`, 'steps-container');
+                addStep(`<p>${tf('step-matrix-b', { rows: rowsB, cols: colsB })}</p><div id="step-matrix-b"></div>`, 'steps-container');
                 displayMatrix(matrixB, 'step-matrix-b');
                 
                 result = multiplyMatrices(matrixA, matrixB);
@@ -134,9 +138,9 @@ function handleMatrixCalculate() {
             
             case 'scalar-multiply': {
                 const scalar = parseFloat(document.getElementById('scalar-value').value);
-                if (isNaN(scalar)) throw new Error('请输入有效的标量值');
+                if (isNaN(scalar)) throw new Error(t('error-invalid-scalar'));
                 
-                addStep(`<p>标量 k = <strong>${formatNumber(scalar)}</strong></p>`, 'steps-container');
+                addStep(`<p>${tf('step-scalar-k', { value: formatNumber(scalar) })}</p>`, 'steps-container');
                 
                 result = scalarMultiplyMatrix(matrixA, scalar);
                 historyInput.scalar = scalar;
@@ -182,7 +186,7 @@ function handleMatrixCalculate() {
             case 'eigen': {
                 const eigenvalues = eigenValues(matrixA);
                 
-                let eigenDisplay = '<p>特征值：</p><ul class="list-disc list-inside space-y-1">';
+                let eigenDisplay = `<p>${t('step-eigenvalues')}</p><ul class="list-disc list-inside space-y-1">`;
                 eigenvalues.forEach((ev, index) => {
                     if (typeof ev === 'object' && 'real' in ev) {
                         const sign = ev.imag >= 0 ? '+' : '';
@@ -203,12 +207,12 @@ function handleMatrixCalculate() {
         if (Array.isArray(result) && Array.isArray(result[0])) {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">矩阵 ${getOperationName(operation)} 结果</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${tf('result-matrix-op', { op: getOperationName(operation) })}</h3>
                     <div id="result-matrix"></div>
                 </div>
             `);
             displayMatrix(result, 'result-matrix');
-            addToHistory('matrix-operation', historyInput, `矩阵 ${getOperationName(operation)}`);
+            addToHistory('matrix-operation', historyInput, `${t('matrix')} ${getOperationName(operation)}`);
         } else if (Array.isArray(result)) {
             let resultDisplay = '<ul class="list-disc list-inside space-y-1">';
             result.forEach((ev, index) => {
@@ -223,15 +227,15 @@ function handleMatrixCalculate() {
             
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">特征值结果</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-eigenvalues')}</h3>
                     ${resultDisplay}
                 </div>
             `);
-            addToHistory('matrix-operation', historyInput, `特征值`);
+            addToHistory('matrix-operation', historyInput, t('op-eigen'));
         } else {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">计算结果</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-calculation')}</h3>
                     <p class="text-3xl font-bold text-primary text-center">${formatNumber(result)}</p>
                 </div>
             `);
@@ -275,12 +279,12 @@ function handleVectorCalculate() {
         const vectorU = getVectorFromInput('vec-u-container', lengthU);
         
         if (lengthU < 1 || lengthU > 10) {
-            throw new Error('向量维度必须在1-10之间');
+            throw new Error(t('error-vector-dim-range'));
         }
         
         clearSteps('steps-container');
         
-        addStep(`<p>向量 u（${lengthU}维）：</p><div id="step-vector-u"></div>`, 'steps-container');
+        addStep(`<p>${tf('step-vector-u', { dim: lengthU })}</p><div id="step-vector-u"></div>`, 'steps-container');
         displayVector(vectorU, 'step-vector-u');
         
         let result, historyInput = { operation, vectorU: vectorU.map(v => toFraction(v.valueOf())) };
@@ -290,9 +294,9 @@ function handleVectorCalculate() {
                 const lengthV = parseInt(document.getElementById('vec-v-length').value) || 3;
                 const vectorV = getVectorFromInput('vec-v-container', lengthV);
                 
-                if (lengthU !== lengthV) throw new Error('两个向量维度必须相同');
+                if (lengthU !== lengthV) throw new Error(t('error-vector-same-dim'));
                 
-                addStep(`<p>向量 v（${lengthV}维）：</p><div id="step-vector-v"></div>`, 'steps-container');
+                addStep(`<p>${tf('step-vector-v', { dim: lengthV })}</p><div id="step-vector-v"></div>`, 'steps-container');
                 displayVector(vectorV, 'step-vector-v');
                 
                 result = addVectors(vectorU, vectorV);
@@ -307,9 +311,9 @@ function handleVectorCalculate() {
                 const lengthV = parseInt(document.getElementById('vec-v-length').value) || 3;
                 const vectorV = getVectorFromInput('vec-v-container', lengthV);
                 
-                if (lengthU !== lengthV) throw new Error('两个向量维度必须相同');
+                if (lengthU !== lengthV) throw new Error(t('error-vector-same-dim'));
                 
-                addStep(`<p>向量 v（${lengthV}维）：</p><div id="step-vector-v"></div>`, 'steps-container');
+                addStep(`<p>${tf('step-vector-v', { dim: lengthV })}</p><div id="step-vector-v"></div>`, 'steps-container');
                 displayVector(vectorV, 'step-vector-v');
                 
                 result = subtractVectors(vectorU, vectorV);
@@ -322,9 +326,9 @@ function handleVectorCalculate() {
             
             case 'scalar-multiply': {
                 const scalar = parseFloat(document.getElementById('vec-scalar-value').value);
-                if (isNaN(scalar)) throw new Error('请输入有效的标量值');
+                if (isNaN(scalar)) throw new Error(t('error-invalid-scalar'));
                 
-                addStep(`<p>标量 k = <strong>${formatNumber(scalar)}</strong></p>`, 'steps-container');
+                addStep(`<p>${tf('step-scalar-k', { value: formatNumber(scalar) })}</p>`, 'steps-container');
                 
                 result = scalarMultiplyVector(vectorU, scalar);
                 historyInput.scalar = scalar;
@@ -338,9 +342,9 @@ function handleVectorCalculate() {
                 const lengthV = parseInt(document.getElementById('vec-v-length').value) || 3;
                 const vectorV = getVectorFromInput('vec-v-container', lengthV);
                 
-                if (lengthU !== lengthV) throw new Error('两个向量维度必须相同');
+                if (lengthU !== lengthV) throw new Error(t('error-vector-same-dim'));
                 
-                addStep(`<p>向量 v（${lengthV}维）：</p><div id="step-vector-v"></div>`, 'steps-container');
+                addStep(`<p>${tf('step-vector-v', { dim: lengthV })}</p><div id="step-vector-v"></div>`, 'steps-container');
                 displayVector(vectorV, 'step-vector-v');
                 
                 result = dotProduct(vectorU, vectorV);
@@ -351,14 +355,14 @@ function handleVectorCalculate() {
             }
             
             case 'cross-product': {
-                if (lengthU !== 3) throw new Error('叉积运算仅适用于3维向量');
+                if (lengthU !== 3) throw new Error(t('error-cross-3d'));
                 
                 const lengthV = parseInt(document.getElementById('vec-v-length').value) || 3;
                 const vectorV = getVectorFromInput('vec-v-container', lengthV);
                 
-                if (lengthV !== 3) throw new Error('叉积运算仅适用于3维向量');
+                if (lengthV !== 3) throw new Error(t('error-cross-3d'));
                 
-                addStep(`<p>向量 v（3维）：</p><div id="step-vector-v"></div>`, 'steps-container');
+                addStep(`<p>${tf('step-vector-v', { dim: 3 })}</p><div id="step-vector-v"></div>`, 'steps-container');
                 displayVector(vectorV, 'step-vector-v');
                 
                 result = crossProduct(vectorU, vectorV);
@@ -379,9 +383,9 @@ function handleVectorCalculate() {
                 const lengthV = parseInt(document.getElementById('vec-v-length').value) || 3;
                 const vectorV = getVectorFromInput('vec-v-container', lengthV);
                 
-                if (lengthU !== lengthV) throw new Error('两个向量维度必须相同');
+                if (lengthU !== lengthV) throw new Error(t('error-vector-same-dim'));
                 
-                addStep(`<p>向量 v（${lengthV}维）：</p><div id="step-vector-v"></div>`, 'steps-container');
+                addStep(`<p>${tf('step-vector-v', { dim: lengthV })}</p><div id="step-vector-v"></div>`, 'steps-container');
                 displayVector(vectorV, 'step-vector-v');
                 
                 const angleRad = vectorAngle(vectorU, vectorV);
@@ -399,16 +403,16 @@ function handleVectorCalculate() {
                 const lengthV = parseInt(document.getElementById('vec-v-length').value) || 3;
                 const vectorV = getVectorFromInput('vec-v-container', lengthV);
                 
-                if (lengthU !== lengthV) throw new Error('两个向量维度必须相同');
+                if (lengthU !== lengthV) throw new Error(t('error-vector-same-dim'));
                 
-                addStep(`<p>向量 v（${lengthV}维）：</p><div id="step-vector-v"></div>`, 'steps-container');
+                addStep(`<p>${tf('step-vector-v', { dim: lengthV })}</p><div id="step-vector-v"></div>`, 'steps-container');
                 displayVector(vectorV, 'step-vector-v');
                 
                 const dot = dotProduct(vectorU, vectorV);
                 const isOrtho = areOrthogonal(vectorU, vectorV);
                 
                 addStep(`<p>u · v = ${formatNumber(dot)}</p>`, 'steps-container');
-                addStep(`<p>${dot.valueOf() === 0 ? '✓' : '✗'} 向量 u 和 v ${isOrtho ? '正交' : '不正交'}</p>`, 'steps-container');
+                addStep(`<p>${dot.valueOf() === 0 ? '✓' : '✗'} ${tf('step-orthogonal-check', { result: isOrtho ? t('result-orthogonal') : t('result-not-orthogonal') })}</p>`, 'steps-container');
                 
                 result = isOrtho;
                 historyInput.vectorV = vectorV.map(v => toFraction(v.valueOf()));
@@ -420,24 +424,24 @@ function handleVectorCalculate() {
         if (Array.isArray(result)) {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">向量 ${getOperationName(operation)} 结果</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${tf('result-vector-op', { op: getOperationName(operation) })}</h3>
                     <div id="result-vector"></div>
                 </div>
             `);
             displayVector(result, 'result-vector');
-            addToHistory('vector-operation', historyInput, `向量 ${getOperationName(operation)}`);
+            addToHistory('vector-operation', historyInput, `${t('vector')} ${getOperationName(operation)}`);
         } else if (typeof result === 'boolean') {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">正交性检验结果</h3>
-                    <p class="text-3xl font-bold text-center ${result ? 'text-green-600' : 'text-red-500'}">${result ? '✓ 正交' : '✗ 不正交'}</p>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-orthogonality')}</h3>
+                    <p class="text-3xl font-bold text-center ${result ? 'text-green-600' : 'text-red-500'}">${result ? '✓ ' + t('result-orthogonal') : '✗ ' + t('result-not-orthogonal')}</p>
                 </div>
             `);
-            addToHistory('vector-operation', historyInput, `正交性：${result ? '正交' : '不正交'}`);
+            addToHistory('vector-operation', historyInput, `${t('orthogonality')}：${result ? t('result-orthogonal') : t('result-not-orthogonal')}`);
         } else {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">计算结果</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-calculation')}</h3>
                     <p class="text-3xl font-bold text-primary text-center">${formatNumber(result)}</p>
                 </div>
             `);
@@ -460,13 +464,13 @@ function handleSystemCalculate() {
         const constants = getVectorFromInput('sys-constants-container', equations);
         
         if (equations < 1 || equations > 10 || variables < 1 || variables > 10) {
-            throw new Error('方程数和变量数必须在1-10之间');
+            throw new Error(t('error-eq-var-range'));
         }
         
         clearSteps('steps-container');
         
         // 显示方程组
-        addStep(`<p>线性方程组：</p><div class="mt-2 space-y-1">`, 'steps-container');
+        addStep(`<p>${t('step-linear-system')}</p><div class="mt-2 space-y-1">`, 'steps-container');
         for (let i = 0; i < equations; i++) {
             let terms = '';
             for (let j = 0; j < variables; j++) {
@@ -493,22 +497,22 @@ function handleSystemCalculate() {
                 result = gaussElimination(coefficients, constants);
                 
                 if (result.type === 'unique-solution') {
-                    let solStr = '<p>方程组有唯一解：</p><ul class="list-disc list-inside space-y-1">';
+                    let solStr = `<p>${t('step-unique-solution')}</p><ul class="list-disc list-inside space-y-1">`;
                     result.solution.forEach((val, idx) => {
                         solStr += `<li>x<sub>${idx + 1}</sub> = <strong>${formatNumber(val)}</strong></li>`;
                     });
                     solStr += '</ul>';
                     addStep(solStr, 'steps-container');
                 } else if (result.type === 'no-solution') {
-                    addStep('<p class="text-red-600 font-semibold">✗ 方程组无解（矛盾方程）</p>', 'steps-container');
+                    addStep(`<p class="text-red-600 font-semibold">✗ ${t('step-no-solution')}</p>`, 'steps-container');
                 } else {
-                    addStep(`<p>方程组有无穷多解，系数矩阵的秩 = ${result.rank}，自由变量数 = ${result.freeVariables}</p>`, 'steps-container');
+                    addStep(`<p>${tf('step-infinite-solutions', { rank: result.rank, free: result.freeVariables })}</p>`, 'steps-container');
                 }
                 break;
             }
             
             case 'lu': {
-                if (equations !== variables) throw new Error('LU分解仅适用于方阵系数矩阵');
+                if (equations !== variables) throw new Error(t('error-lu-square'));
                 
                 const { L, U } = luDecomposition(coefficients);
                 
@@ -520,7 +524,7 @@ function handleSystemCalculate() {
                 
                 const solution = solveWithLU(L, U, constants);
                 
-                let solStr = '<p>方程组的解：</p><ul class="list-disc list-inside space-y-1">';
+                let solStr = `<p>${t('step-lu-solution')}</p><ul class="list-disc list-inside space-y-1">`;
                 solution.forEach((val, idx) => {
                     solStr += `<li>x<sub>${idx + 1}</sub> = <strong>${formatNumber(val)}</strong></li>`;
                 });
@@ -536,17 +540,17 @@ function handleSystemCalculate() {
                 result = gaussElimination(coefficients, constants);
                 
                 if (result.type === 'trivial-solution' || result.type === 'unique-solution') {
-                    let solStr = '<p>方程组有唯一解：</p><ul class="list-disc list-inside space-y-1">';
+                    let solStr = `<p>${t('step-unique-solution')}</p><ul class="list-disc list-inside space-y-1">`;
                     result.solution.forEach((val, idx) => {
                         solStr += `<li>x<sub>${idx + 1}</sub> = <strong>${formatNumber(val)}</strong></li>`;
                     });
                     solStr += '</ul>';
                     addStep(solStr, 'steps-container');
                 } else if (result.type === 'no-solution') {
-                    addStep('<p class="text-red-600 font-semibold">✗ 方程组无解</p>', 'steps-container');
+                    addStep(`<p class="text-red-600 font-semibold">✗ ${t('result-no-solution')}</p>`, 'steps-container');
                 } else {
-                    addStep(`<p>方程组有无穷多解，系数矩阵的秩 = ${result.rank}，自由变量数 = ${result.freeVariables}</p>`, 'steps-container');
-                    addStep(`<p>通解 = 特解 + 齐次方程组基础解系的线性组合</p>`, 'steps-container');
+                    addStep(`<p>${tf('step-infinite-solutions', { rank: result.rank, free: result.freeVariables })}</p>`, 'steps-container');
+                    addStep(`<p>${t('step-general-solution')}</p>`, 'steps-container');
                 }
                 break;
             }
@@ -562,28 +566,28 @@ function handleSystemCalculate() {
             
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">✓ 唯一解</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">✓ ${t('result-unique-solution')}</h3>
                     ${solDisplay}
                 </div>
             `);
-            addToHistory('linear-system', { method, coefficients, constants }, `唯一解`);
+            addToHistory('linear-system', { method, coefficients, constants }, t('result-unique-solution'));
         } else if (result.type === 'no-solution') {
             showResult(`
                 <div class="result-card border-red-200 bg-red-50">
-                    <h3 class="text-lg font-semibold text-red-700 mb-2">✗ 无解</h3>
-                    <p class="text-red-600">方程组存在矛盾，无解</p>
+                    <h3 class="text-lg font-semibold text-red-700 mb-2">✗ ${t('result-no-solution')}</h3>
+                    <p class="text-red-600">${t('result-no-solution-desc')}</p>
                 </div>
             `);
-            addToHistory('linear-system', { method, coefficients, constants }, '无解');
+            addToHistory('linear-system', { method, coefficients, constants }, t('result-no-solution'));
         } else {
             showResult(`
                 <div class="result-card border-yellow-200 bg-yellow-50">
-                    <h3 class="text-lg font-semibold text-yellow-700 mb-3">∞ 无穷多解</h3>
-                    <p>系数矩阵的秩 = <strong>${result.rank}</strong></p>
-                    <p>自由变量数 = <strong>${result.freeVariables}</strong></p>
+                    <h3 class="text-lg font-semibold text-yellow-700 mb-3">∞ ${t('result-infinite-solutions')}</h3>
+                    <p>${tf('result-rank', { rank: result.rank })}</p>
+                    <p>${tf('result-free-vars', { free: result.freeVariables })}</p>
                 </div>
             `);
-            addToHistory('linear-system', { method, coefficients, constants }, `无穷多解（秩=${result.rank}）`);
+            addToHistory('linear-system', { method, coefficients, constants }, `${t('result-infinite-solutions')}（${t('op-rank')}=${result.rank}）`);
         }
         
     } catch (error) {
@@ -600,7 +604,7 @@ function handleVectorGroupCalculate() {
         const vectorDimension = parseInt(document.getElementById('vg-dimension').value) || 3;
         
         if (vectorCount < 1 || vectorCount > 10 || vectorDimension < 1 || vectorDimension > 10) {
-            throw new Error('向量个数和维度必须在1-10之间');
+            throw new Error(t('error-vg-range'));
         }
         
         const vectors = [];
@@ -610,7 +614,7 @@ function handleVectorGroupCalculate() {
         
         clearSteps('steps-container');
         
-        addStep(`<p>向量组（共${vectorCount}个${vectorDimension}维向量）：</p><div class="space-y-2 mt-2">`, 'steps-container');
+        addStep(`<p>${tf('step-vector-group', { count: vectorCount, dim: vectorDimension })}</p><div class="space-y-2 mt-2">`, 'steps-container');
         vectors.forEach((vec, idx) => {
             addStep(`<p>α<sub>${idx + 1}</sub> = </p><div id="step-vg-${idx}"></div>`, 'steps-container');
             displayVector(vec, `step-vg-${idx}`);
@@ -624,8 +628,8 @@ function handleVectorGroupCalculate() {
                 const isDep = isLinearlyDependent(vectors);
                 const rank = vectorGroupRank(vectors);
                 
-                addStep(`<p>向量组的秩 = <strong>${rank}</strong></p>`, 'steps-container');
-                addStep(`<p class="font-semibold">${rank < vectorCount ? '✓ 线性相关' : '✗ 线性无关'}</p>`, 'steps-container');
+                addStep(`<p>${tf('step-group-rank', { rank })}</p>`, 'steps-container');
+                addStep(`<p class="font-semibold">${rank < vectorCount ? '✓ ' + t('step-linear-dependent') : '✗ ' + t('step-linear-independent')}</p>`, 'steps-container');
                 
                 result = isDep;
                 break;
@@ -634,7 +638,7 @@ function handleVectorGroupCalculate() {
             case 'max-independent': {
                 const { vectors: maxIndVectors, indices } = maxIndependentSet(vectors);
                 
-                addStep(`<p>极大无关组（包含 ${maxIndVectors.length} 个向量）：</p><div class="space-y-2 mt-2">`, 'steps-container');
+                addStep(`<p>${tf('step-max-independent-set', { count: maxIndVectors.length })}</p><div class="space-y-2 mt-2">`, 'steps-container');
                 maxIndVectors.forEach((vec, idx) => {
                     const origIdx = indices[idx] + 1;
                     addStep(`<p>α<sub>${origIdx}</sub> = </p><div id="step-mi-${idx}"></div>`, 'steps-container');
@@ -648,7 +652,7 @@ function handleVectorGroupCalculate() {
             
             case 'rank': {
                 const rank = vectorGroupRank(vectors);
-                addStep(`<p>向量组的秩 = <strong>${rank}</strong></p>`, 'steps-container');
+                addStep(`<p>${tf('step-group-rank', { rank })}</p>`, 'steps-container');
                 result = rank;
                 break;
             }
@@ -656,14 +660,14 @@ function handleVectorGroupCalculate() {
             case 'schmidt': {
                 const { orthogonal, orthonormal } = schmidtOrthogonalization(vectors);
                 
-                addStep(`<p>正交化后的向量组：</p><div class="space-y-2 mt-2">`, 'steps-container');
+                addStep(`<p>${t('step-orthogonalized')}</p><div class="space-y-2 mt-2">`, 'steps-container');
                 orthogonal.forEach((vec, idx) => {
                     addStep(`<p>β<sub>${idx + 1}</sub> = </p><div id="step-ortho-${idx}"></div>`, 'steps-container');
                     displayVector(vec, `step-ortho-${idx}`);
                 });
                 addStep(`</div>`, 'steps-container');
                 
-                addStep(`<p>单位化后的向量组：</p><div class="space-y-2 mt-2">`, 'steps-container');
+                addStep(`<p>${t('step-normalized')}</p><div class="space-y-2 mt-2">`, 'steps-container');
                 orthonormal.forEach((vec, idx) => {
                     addStep(`<p>γ<sub>${idx + 1}</sub> = </p><div id="step-on-${idx}"></div>`, 'steps-container');
                     displayVector(vec, `step-on-${idx}`);
@@ -679,19 +683,19 @@ function handleVectorGroupCalculate() {
         if (typeof result === 'boolean') {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">线性相关性分析</h3>
-                    <p class="text-3xl font-bold text-center ${result ? 'text-orange-500' : 'text-green-600'}">${result ? '线性相关' : '线性无关'}</p>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-linear-dep-analysis')}</h3>
+                    <p class="text-3xl font-bold text-center ${result ? 'text-orange-500' : 'text-green-600'}">${result ? t('result-linear-dep') : t('result-linear-indep')}</p>
                 </div>
             `);
-            addToHistory('vector-group', historyInput, `线性${result ? '相关' : '无关'}`);
+            addToHistory('vector-group', historyInput, `${t('op-linear-dependency')}：${result ? t('result-linear-dep') : t('result-linear-indep')}`);
         } else if (typeof result === 'number') {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">向量组的秩</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-group-rank')}</h3>
                     <p class="text-3xl font-bold text-primary text-center">${result}</p>
                 </div>
             `);
-            addToHistory('vector-group', historyInput, `秩 = ${result}`);
+            addToHistory('vector-group', historyInput, `${t('op-rank')} = ${result}`);
         } else if (result.vectors && result.indices) {
             let vecDisplay = '<ul class="list-disc list-inside space-y-1">';
             result.indices.forEach(idx => {
@@ -701,19 +705,19 @@ function handleVectorGroupCalculate() {
             
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">极大无关组</h3>
-                    <p class="mb-2 text-gray-600">包含以下 ${result.vectors.length} 个向量：</p>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-max-independent')}</h3>
+                    <p class="mb-2 text-gray-600">${tf('result-max-independent-desc', { count: result.vectors.length })}</p>
                     ${vecDisplay}
                 </div>
             `);
-            addToHistory('vector-group', historyInput, '极大无关组');
+            addToHistory('vector-group', historyInput, t('op-max-independent'));
         } else if (result.orthogonal && result.orthonormal) {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">施密特正交化</h3>
-                    <p class="text-gray-600 mb-2">正交化：${result.orthogonal.length} 个向量</p>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-schmidt')}</h3>
+                    <p class="text-gray-600 mb-2">${tf('result-orthogonalized', { count: result.orthogonal.length })}</p>
                     <div id="schmidt-ortho" class="mb-4"></div>
-                    <p class="text-gray-600 mb-2">单位正交化：${result.orthonormal.length} 个向量</p>
+                    <p class="text-gray-600 mb-2">${tf('result-normalized', { count: result.orthonormal.length })}</p>
                     <div id="schmidt-on"></div>
                 </div>
             `);
@@ -735,13 +739,13 @@ function handleVectorGroupCalculate() {
                     container.appendChild(row);
                 });
                 if (vecs.length > 3) {
-                    container.innerHTML += `<p class="text-gray-400 text-sm">...共 ${vecs.length} 个向量</p>`;
+                    container.innerHTML += `<p class="text-gray-400 text-sm">...${tf('result-total-vectors', { count: vecs.length })}</p>`;
                 }
             };
             showVec(result.orthogonal, 'schmidt-ortho');
             showVec(result.orthonormal, 'schmidt-on');
             
-            addToHistory('vector-group', historyInput, '施密特正交化');
+            addToHistory('vector-group', historyInput, t('op-schmidt'));
         }
         
     } catch (error) {
@@ -758,7 +762,7 @@ function handleQuadraticCalculate() {
         const matrix = getMatrixFromInput('qf-matrix-container', dimension, dimension);
         
         if (dimension < 1 || dimension > 10) {
-            throw new Error('维度必须在1-10之间');
+            throw new Error(t('error-dimension-range'));
         }
         
         let symMatrix = matrix;
@@ -771,10 +775,10 @@ function handleQuadraticCalculate() {
         clearSteps('steps-container');
         
         if (wasSymmetrized) {
-            addStep(`<p class="text-amber-600">⚠ 输入矩阵非对称，已自动对称化</p>`, 'steps-container');
+            addStep(`<p class="text-amber-600">⚠ ${t('step-non-symmetric')}</p>`, 'steps-container');
         }
         
-        addStep(`<p>二次型矩阵 A（${dimension}×${dimension}）：</p><div id="step-qf"></div>`, 'steps-container');
+        addStep(`<p>${tf('step-quadratic-matrix', { dim: dimension })}</p><div id="step-qf"></div>`, 'steps-container');
         displayMatrix(symMatrix, 'step-qf');
         
         let result;
@@ -783,7 +787,7 @@ function handleQuadraticCalculate() {
             case 'standard-form': {
                 const { matrix: stdMatrix, eigenvalues } = standardForm(symMatrix);
                 
-                let evDisplay = '<p>特征值：</p><ul class="list-disc list-inside space-y-1">';
+                let evDisplay = `<p>${t('step-eigenvalues-label')}</p><ul class="list-disc list-inside space-y-1">`;
                 eigenvalues.forEach((ev, idx) => {
                     if (typeof ev === 'object' && 'real' in ev) {
                         const sign = ev.imag >= 0 ? '+' : '';
@@ -795,7 +799,7 @@ function handleQuadraticCalculate() {
                 evDisplay += '</ul>';
                 addStep(evDisplay, 'steps-container');
                 
-                addStep(`<p>标准形矩阵（对角矩阵）：</p><div id="step-std"></div>`, 'steps-container');
+                addStep(`<p>${t('step-std-matrix')}</p><div id="step-std"></div>`, 'steps-container');
                 displayMatrix(stdMatrix, 'step-std');
                 
                 result = { matrix: stdMatrix, eigenvalues };
@@ -804,7 +808,7 @@ function handleQuadraticCalculate() {
             
             case 'canonical-form': {
                 const canonMatrix = canonicalForm(symMatrix);
-                addStep(`<p>规范形矩阵（正负惯性指数）：</p><div id="step-canon"></div>`, 'steps-container');
+                addStep(`<p>${t('step-canon-matrix')}</p><div id="step-canon"></div>`, 'steps-container');
                 displayMatrix(canonMatrix, 'step-canon');
                 
                 let p = 0, q = 0;
@@ -821,7 +825,7 @@ function handleQuadraticCalculate() {
             case 'positive-definite': {
                 const isPD = isPositiveDefinite(symMatrix);
                 
-                let minorStr = '<p>顺序主子式：</p><ul class="list-disc list-inside space-y-1">';
+                let minorStr = `<p>${t('step-principal-minors')}</p><ul class="list-disc list-inside space-y-1">`;
                 for (let i = 1; i <= dimension; i++) {
                     const minor = getPrincipalMinor(symMatrix, i);
                     const det = determinant(minor);
@@ -830,7 +834,7 @@ function handleQuadraticCalculate() {
                 minorStr += '</ul>';
                 addStep(minorStr, 'steps-container');
                 
-                addStep(`<p class="font-semibold">${isPD ? '✓ 二次型正定' : '✗ 二次型不正定'}</p>`, 'steps-container');
+                addStep(`<p class="font-semibold">${isPD ? '✓ ' + t('step-positive-definite-result') : '✗ ' + t('step-not-positive-definite')}</p>`, 'steps-container');
                 
                 result = isPD;
                 break;
@@ -841,29 +845,29 @@ function handleQuadraticCalculate() {
         if (typeof result === 'boolean') {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">正定性分析结果</h3>
-                    <p class="text-3xl font-bold text-center ${result ? 'text-green-600' : 'text-red-500'}">${result ? '✓ 正定' : '✗ 不正定'}</p>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-positive-def-analysis')}</h3>
+                    <p class="text-3xl font-bold text-center ${result ? 'text-green-600' : 'text-red-500'}">${result ? '✓ ' + t('result-positive-def') : '✗ ' + t('result-not-positive-def')}</p>
                 </div>
             `);
-            addToHistory('quadratic-form', { operation, matrix: symMatrix }, `正定性：${result ? '正定' : '不正定'}`);
+            addToHistory('quadratic-form', { operation, matrix: symMatrix }, `${t('op-positive-definite')}：${result ? t('result-positive-def') : t('result-not-positive-def')}`);
         } else if (result.matrix && result.eigenvalues) {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">标准形结果</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-standard-form')}</h3>
                     <div id="result-std"></div>
                 </div>
             `);
             displayMatrix(result.matrix, 'result-std');
-            addToHistory('quadratic-form', { operation, matrix: symMatrix }, '标准形');
+            addToHistory('quadratic-form', { operation, matrix: symMatrix }, t('op-standard-form'));
         } else {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">规范形结果</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-canonical-form')}</h3>
                     <div id="result-canon"></div>
                 </div>
             `);
             displayMatrix(result, 'result-canon');
-            addToHistory('quadratic-form', { operation, matrix: symMatrix }, '规范形');
+            addToHistory('quadratic-form', { operation, matrix: symMatrix }, t('op-canonical-form'));
         }
         
     } catch (error) {
@@ -876,7 +880,7 @@ function handleQuadraticCalculate() {
 function showError(message) {
     showResult(`
         <div class="result-card border-red-200 bg-red-50">
-            <h3 class="text-lg font-semibold text-red-700 mb-2">⚠ 计算错误</h3>
+            <h3 class="text-lg font-semibold text-red-700 mb-2">⚠ ${t('error-calculation')}</h3>
             <p class="text-red-600">${message}</p>
         </div>
     `);

@@ -590,15 +590,15 @@ function gaussElimination(coefficients, constants) {
         // 归一化主元行
         const pivot = augMatrix[i][i];
         for (let j = i; j <= m; j++) {
-            augMatrix[i][j] = toFraction(augMatrix[i][j].valueOf() / pivot.valueOf());
+            augMatrix[i][j] = augMatrix[i][j].divide(pivot);
         }
         
         // 消去其他行
         for (let k = 0; k < n; k++) {
             if (k !== i && Math.abs(augMatrix[k][i].valueOf()) > 1e-10) {
-                const factor = augMatrix[k][i].valueOf();
+                const factor = augMatrix[k][i];
                 for (let j = i; j <= m; j++) {
-                    augMatrix[k][j] = toFraction(augMatrix[k][j].valueOf() - factor * augMatrix[i][j].valueOf());
+                    augMatrix[k][j] = augMatrix[k][j].subtract(factor.multiply(augMatrix[i][j]));
                 }
             }
         }
@@ -686,7 +686,7 @@ function luDecomposition(matrix) {
             for (let k = 0; k < i; k++) {
                 sum = sum.add(L[i][k].multiply(U[k][j]));
             }
-            U[i][j] = toFraction(matrix[i][j].valueOf() - sum.valueOf());
+            U[i][j] = matrix[i][j].subtract(sum);
         }
         
         // 计算L的第i列
@@ -700,7 +700,7 @@ function luDecomposition(matrix) {
                 throw new Error('矩阵无法进行LU分解（主元为零）');
             }
             
-            L[j][i] = toFraction((matrix[j][i].valueOf() - sum.valueOf()) / U[i][i].valueOf());
+            L[j][i] = matrix[j][i].subtract(sum).divide(U[i][i]);
         }
     }
     
@@ -720,7 +720,7 @@ function solveWithLU(L, U, b) {
         for (let j = 0; j < i; j++) {
             sum = sum.add(L[i][j].multiply(y[j]));
         }
-        y[i] = toFraction(b[i].valueOf() - sum.valueOf());
+        y[i] = b[i].subtract(sum);
     }
     
     // 求解 Ux = y
@@ -733,7 +733,7 @@ function solveWithLU(L, U, b) {
         if (Math.abs(U[i][i].valueOf()) < 1e-10) {
             throw new Error('矩阵奇异，无法求解');
         }
-        x[i] = toFraction((y[i].valueOf() - sum.valueOf()) / U[i][i].valueOf());
+        x[i] = y[i].subtract(sum).divide(U[i][i]);
     }
     
     return x;
@@ -836,7 +836,7 @@ function schmidtOrthogonalization(vectors) {
             const dotVV = dotProduct(orthogonalVectors[j], orthogonalVectors[j]);
             if (Math.abs(dotVV.valueOf()) < 1e-10) continue;
             
-            const proj = toFraction(dotProduct(v, orthogonalVectors[j]).valueOf() / dotVV.valueOf());
+            const proj = dotProduct(v, orthogonalVectors[j]).divide(dotVV);
             v = subtractVectors(v, scalarMultiplyVector(orthogonalVectors[j], proj));
         }
         

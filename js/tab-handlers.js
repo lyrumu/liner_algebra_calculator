@@ -32,16 +32,18 @@ function switchTab(tabId) {
     }
     
     // 清空结果和步骤
+    const noDataText = (typeof window !== 'undefined' && window.i18n) ? window.i18n.t('no-data') : '请在左侧输入数据并点击计算按钮';
     showResult(`
         <div class="flex flex-col items-center justify-center h-40 text-gray-400">
             <i class="fa fa-calculator text-4xl mb-3"></i>
-            <p>请在左侧输入数据并点击计算按钮</p>
+            <p>${noDataText}</p>
         </div>
     `);
     clearSteps('steps-container');
     document.getElementById('steps-container').classList.add('hidden');
+    const showStepsText = (typeof window !== 'undefined' && window.i18n) ? window.i18n.t('show-steps') : '显示步骤';
     document.getElementById('toggle-steps').innerHTML = 
-        '<span>显示步骤</span><i class="fa fa-chevron-down ml-1"></i>';
+        `<span>${showStepsText}</span><i class="fa fa-chevron-down ml-1"></i>`;
     
     // 切换到对应tab时重新初始化输入控件
     initializeTabInputs(tabId);
@@ -94,8 +96,9 @@ function initVectorGroupInputs() {
     for (let i = 0; i < vectorCount; i++) {
         const vectorDiv = document.createElement('div');
         vectorDiv.className = 'mb-3';
+        const alphaLabel = (typeof window !== 'undefined' && window.i18n) ? window.i18n.tf('vector-alpha', { index: i + 1 }) : `向量 α${i + 1}`;
         vectorDiv.innerHTML = `
-            <label class="block text-sm text-gray-600 mb-1 font-medium">向量 α<sub>${i + 1}</sub></label>
+            <label class="block text-sm text-gray-600 mb-1 font-medium">${alphaLabel}</label>
             <div id="vg-vector-${i}-container" class="flex flex-wrap gap-1"></div>
         `;
         container.appendChild(vectorDiv);
@@ -121,13 +124,15 @@ function initStepsToggle() {
     document.getElementById('toggle-steps')?.addEventListener('click', () => {
         const stepsContainer = document.getElementById('steps-container');
         const toggleButton = document.getElementById('toggle-steps');
-        
+        const showText = (typeof window !== 'undefined' && window.i18n) ? window.i18n.t('show-steps') : '显示步骤';
+        const hideText = (typeof window !== 'undefined' && window.i18n) ? window.i18n.t('hide-steps') : '隐藏步骤';
+
         if (stepsContainer.classList.contains('hidden')) {
             stepsContainer.classList.remove('hidden');
-            toggleButton.innerHTML = '<span>隐藏步骤</span><i class="fa fa-chevron-up ml-1"></i>';
+            toggleButton.innerHTML = `<span>${hideText}</span><i class="fa fa-chevron-up ml-1"></i>`;
         } else {
             stepsContainer.classList.add('hidden');
-            toggleButton.innerHTML = '<span>显示步骤</span><i class="fa fa-chevron-down ml-1"></i>';
+            toggleButton.innerHTML = `<span>${showText}</span><i class="fa fa-chevron-down ml-1"></i>`;
         }
     });
 }
@@ -273,7 +278,8 @@ function initQuadraticHandlers() {
  */
 function initHistoryHandlers() {
     document.getElementById('clear-history')?.addEventListener('click', () => {
-        if (confirm('确定要清空所有历史记录吗？')) {
+        const confirmMsg = (typeof window !== 'undefined' && window.i18n) ? window.i18n.t('confirm-clear-history') : '确定要清空所有历史记录吗？';
+        if (confirm(confirmMsg)) {
             calculationHistory = [];
             try {
                 localStorage.removeItem('linearAlgebraHistory');
