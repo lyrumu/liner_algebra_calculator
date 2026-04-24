@@ -9,9 +9,23 @@
     <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
     
+    <!-- 主题初始化（防止闪烁） -->
+    <script>
+        (function() {
+            const saved = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (saved === 'dark' || (!saved && prefersDark)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+    
     <!-- 外部依赖 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- 访问量统计 (busuanzi) -->
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
     
     <!-- 本地CSS -->
     <link href="css/styles.css" rel="stylesheet">
@@ -19,6 +33,7 @@
     <!-- Tailwind配置 -->
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -37,16 +52,45 @@
         }
     </script>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
     <div class="container mx-auto px-4 py-8">
         <!-- 标题区域 -->
-        <header class="mb-8 text-center">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">线性代数计算器</h1>
-            <p class="text-gray-500">基于居余马《线性代数》教材，提供全面的线性代数计算功能</p>
+        <header class="mb-8 relative">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-2">线性代数计算器</h1>
+            </div>
+            <!-- 主题切换按钮 -->
+            <button id="theme-toggle" type="button"
+               class="absolute top-1 right-10 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors duration-200 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+               title="切换主题" aria-label="切换深色/浅色主题">
+                <!-- 太阳图标（浅色模式显示） -->
+                <svg class="dark:hidden" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <!-- 月亮图标（深色模式显示） -->
+                <svg class="hidden dark:block" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+            <a href="https://github.com/lyrumu" target="_blank" rel="noopener noreferrer"
+               class="absolute top-1 right-0 text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors duration-200 p-1"
+               title="GitHub" aria-label="访问我的 GitHub 主页">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+            </a>
         </header>
 
         <!-- 导航栏 -->
-        <nav class="bg-white rounded-xl shadow-md mb-8 overflow-x-auto">
+        <nav class="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 mb-8 overflow-x-auto">
             <ul class="flex space-x-1 p-1.5" id="nav-tabs">
                 <li><button class="nav-item active" data-tab="determinant">行列式</button></li>
                 <li><button class="nav-item" data-tab="matrix">矩阵运算</button></li>
@@ -62,11 +106,11 @@
         <div class="flex flex-col lg:flex-row gap-6">
             <!-- 左侧输入面板 -->
             <div class="w-full lg:w-1/2">
-                <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6">
                     
                     <!-- 行列式计算 -->
                     <div id="determinant-tab" class="tab-content">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
                             <i class="fa fa-th text-primary"></i>
                             行列式计算
                         </h2>
@@ -101,7 +145,7 @@
 
                     <!-- 矩阵运算 -->
                     <div id="matrix-tab" class="tab-content hidden">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
                             <i class="fa fa-th-large text-primary"></i>
                             矩阵运算
                         </h2>
@@ -172,7 +216,7 @@
 
                     <!-- 向量运算 -->
                     <div id="vector-tab" class="tab-content hidden">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
                             <i class="fa fa-arrows text-primary"></i>
                             向量运算
                         </h2>
@@ -231,7 +275,7 @@
 
                     <!-- 线性方程组 -->
                     <div id="linear-system-tab" class="tab-content hidden">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
                             <i class="fa fa-superscript text-primary"></i>
                             线性方程组求解
                         </h2>
@@ -283,7 +327,7 @@
 
                     <!-- 向量组 -->
                     <div id="vector-group-tab" class="tab-content hidden">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
                             <i class="fa fa-share-alt text-primary"></i>
                             向量组分析
                         </h2>
@@ -330,7 +374,7 @@
 
                     <!-- 二次型 -->
                     <div id="quadratic-form-tab" class="tab-content hidden">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
                             <i class="fa fa-line-chart text-primary"></i>
                             二次型分析
                         </h2>
@@ -370,12 +414,12 @@
 
                     <!-- 历史记录 -->
                     <div id="history-tab" class="tab-content hidden">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-2">
                             <i class="fa fa-history text-primary"></i>
                             历史记录
                         </h2>
                         <div class="flex justify-between items-center mb-4">
-                            <p class="text-sm text-gray-500">点击记录可快速加载</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">点击记录可快速加载</p>
                             <button id="clear-history" class="btn-secondary text-sm px-4 py-2">
                                 <i class="fa fa-trash-o mr-1"></i>清空
                             </button>
@@ -389,26 +433,26 @@
 
             <!-- 右侧结果面板 -->
             <div class="w-full lg:w-1/2">
-                <div class="bg-white rounded-xl shadow-md p-6 sticky top-6">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6 sticky top-6">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
                         <i class="fa fa-check-circle text-primary"></i>
                         计算结果
                     </h2>
                     <div id="result-container" class="min-h-[200px]">
-                        <div class="flex flex-col items-center justify-center h-48 text-gray-400">
+                        <div class="flex flex-col items-center justify-center h-48 text-gray-400 dark:text-gray-500">
                             <i class="fa fa-calculator text-5xl mb-4 opacity-30"></i>
-                            <p class="text-lg">请在左侧输入数据并点击计算按钮</p>
-                            <p class="text-sm mt-1 opacity-60">支持分数输入，如 1/2, 3_1/2（带分数）</p>
+                            <p class="text-lg dark:text-gray-400">请在左侧输入数据并点击计算按钮</p>
+                            <p class="text-sm mt-1 opacity-60 dark:text-gray-500">支持分数输入，如 1/2, 3_1/2（带分数）</p>
                         </div>
                     </div>
                     
-                    <div class="mt-6 pt-4 border-t border-gray-100">
+                    <div class="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
                         <div class="flex justify-between items-center mb-3">
-                            <h3 class="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                                 <i class="fa fa-list-ol text-primary"></i>
                                 计算过程
                             </h3>
-                            <button id="toggle-steps" class="text-primary hover:text-blue-700 text-sm flex items-center font-medium transition-colors">
+                            <button id="toggle-steps" class="text-primary hover:text-blue-700 dark:hover:text-blue-400 text-sm flex items-center font-medium transition-colors">
                                 <span>显示步骤</span>
                                 <i class="fa fa-chevron-down ml-1"></i>
                             </button>
@@ -423,12 +467,29 @@
     </div>
 
     <!-- 页脚 -->
-    <footer class="bg-gray-800 text-gray-300 py-8 mt-12">
+    <footer class="bg-gray-800 dark:bg-gray-950 text-gray-300 py-8 mt-12">
         <div class="container mx-auto px-4 text-center">
             <p class="text-lg font-medium">线性代数计算器</p>
-            <p class="text-sm text-gray-500 mt-2">基于居余马《线性代数》教材 · 提供分数精确计算</p>
+            <div class="mt-3 text-xs text-gray-600 dark:text-gray-500">
+                <span id="busuanzi_container_site_pv">本站总访问量 <span id="busuanzi_value_site_pv"></span> 次</span>
+                <span class="mx-2">·</span>
+                <span id="busuanzi_container_site_uv">访客数 <span id="busuanzi_value_site_uv"></span> 人</span>
+            </div>
         </div>
     </footer>
+
+    <!-- 主题切换逻辑 -->
+    <script>
+        (function() {
+            const toggle = document.getElementById('theme-toggle');
+            if (!toggle) return;
+            
+            toggle.addEventListener('click', function() {
+                const isDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            });
+        })();
+    </script>
 
     <!-- JavaScript文件（按依赖顺序加载）-->
     <script src="js/fraction.js"></script>
