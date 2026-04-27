@@ -10,6 +10,17 @@
  */
 function formatNumber(num) {
     if (num instanceof Fraction) {
+        // 对大分子/大分母的分数，转为小数显示以避免不美观的超长分数
+        if (num.denominator > 100 || Math.abs(num.numerator) > 100) {
+            const val = num.valueOf();
+            // 保留合适精度的小数（最多6位有效数字）
+            if (Math.abs(val) < 1e-10) return '0';
+            if (Math.abs(val) >= 1e6 || (Math.abs(val) < 1e-3 && val !== 0)) {
+                return val.toExponential(4);
+            }
+            // 四舍六入五成双，保留6位小数
+            return parseFloat(val.toPrecision(8)).toString();
+        }
         return num.toString();
     }
     
@@ -70,6 +81,28 @@ function createMatrixInput(containerId, rows, cols, defaultValue = '') {
     if (!container) return;
     container.innerHTML = '';
 
+    // 清空按钮区域
+    const toolbar = document.createElement('div');
+    toolbar.className = 'flex justify-end mb-1';
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'text-xs text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors flex items-center gap-0.5 px-2 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700';
+    clearBtn.title = window.i18n ? window.i18n.t('clear') : '清空';
+    clearBtn.innerHTML = '<i class="fa fa-times"></i>';
+    clearBtn.addEventListener('click', () => {
+        const table = container.querySelector('.matrix-input-table');
+        if (table) {
+            table.querySelectorAll('.matrix-cell-input').forEach(input => {
+                input.value = '';
+                input.focus();
+            });
+        }
+        // 保存清空后的状态到标签页状态中
+        saveTabState(currentTab);
+    });
+    toolbar.appendChild(clearBtn);
+    container.appendChild(toolbar);
+
     const table = document.createElement('table');
     table.className = 'matrix-input-table';
     for (let i = 0; i < rows; i++) {
@@ -94,27 +127,177 @@ function createMatrixInput(containerId, rows, cols, defaultValue = '') {
 }
 
 /**
- * 矩阵输入框键盘导航
+ * 获取当前标签页的所有输入容器的有序列表（按输入顺序）
+ * @returns {Array<{containerId: string, type: string}>} 容器列表，type为'matrix'|'vector'|'scalar'
+ */
+function getInputContainersForCurrentTab() {
+    const tab = typeof currentTab !== 'undefined' ? currentTab : 'determinant';
+    const containers = [];
+    
+    switch (tab) {
+        case 'determinant':
+            containers.push({ containerId: 'det-matrix-container', type: 'matrix' });
+            break;
+            
+        case 'matrix': {
+            const operation = document.getElementById('matrix-operation')?.value || 'add';
+            containers.push({ containerId: 'mat-a-container', type: 'matrix' });
+            if (['add', 'subtract', 'multiply'].includes(operation)) {
+                containers.push({ containerId: 'mat-b-container', type: 'matrix' });
+            } else if (operation === 'scalar-multiply') {
+                // 标量值用特殊处理
+                containers.push({ containerId: 'scalar-value', type: 'scalar' });
+            }
+            break;
+        }
+        
+        case 'vector': {
+            const operation = document.getElementById('vector-operation')?.value || 'add';
+            containers.push({ containerId: 'vec-u-container', type: 'vector' });
+            if (['add', 'subtract', 'dot-product', 'cross-product', 'angle', 'orthogonality'].includes(operation)) {
+                containers.push({ containerId: 'vec-v-container', type: 'vector' });
+            } else if (operation === 'scalar-multiply') {
+                containers.push({ containerId: 'vec-scalar-value', type: 'scalar' });
+            }
+            break;
+        }
+        
+        case 'linear-system':
+            containers.push({ containerId: 'sys-coefficients-container', type: 'matrix' });
+            containers.push({ containerId: 'sys-constants-container', type: 'vector' });
+            break;
+            
+        case 'vector-group': {
+            // 动态获取向量组容器数量
+            const vgContainer = document.getElementById('vector-group-container');
+            if (vgContainer) {
+                const vectorContainers = vgContainer.querySelectorAll('[id^="vg-vector-"][id$="-container"]');
+                vectorContainers.forEach((vc) => {
+                    containers.push({ containerId: vc.id, type: 'vector' });
+                });
+            }
+            break;
+        }
+        
+        case 'quadratic-form':
+            containers.push({ containerId: 'qf-matrix-container', type: 'matrix' });
+            break;
+    }
+    
+    return containers;
+}
+
+/**
+ * 获取当前标签页的计算按钮ID
+ * @returns {string|null}
+ */
+function getCalculateButtonForCurrentTab() {
+    const tab = typeof currentTab !== 'undefined' ? currentTab : 'determinant';
+    switch (tab) {
+        case 'determinant': return 'det-calculate';
+        case 'matrix': return 'matrix-calculate';
+        case 'vector': return 'vector-calculate';
+        case 'linear-system': return 'system-calculate';
+        case 'vector-group': return 'vector-group-calculate';
+        case 'quadratic-form': return 'quadratic-calculate';
+        default: return null;
+    }
+}
+
+/**
+ * 矩阵/向量输入框键盘导航（方向键 + 回车）
+ * 增强功能：
+ * 1. 在同一矩阵/向量内按行优先顺序跳转
+ * 2. 最后一个输入框回车时跳转到下一个容器
+ * 3. 所有输入完成后回车直接触发计算
  */
 function handleMatrixKeyNav(e) {
     const input = e.target;
-    const container = input.closest('table');
-    if (!container) return;
+    const isVectorInput = input.dataset.containerType === 'vector';
 
-    const inputs = Array.from(container.querySelectorAll('.matrix-cell-input'));
+    // 向量输入：获取同容器内的所有输入框
+    let inputs;
+    if (isVectorInput) {
+        const vc = document.getElementById(input.dataset.containerId);
+        inputs = vc ? Array.from(vc.querySelectorAll('.vector-cell-input')) : [input];
+    } else if (input.type === 'text' && input.classList.contains('matrix-cell-input')) {
+        // 矩阵输入：从table中获取
+        const container = input.closest('table');
+        if (!container) return;
+        inputs = Array.from(container.querySelectorAll('.matrix-cell-input'));
+    } else {
+        return; // 非矩阵/向量输入框不处理
+    }
+
     const currentIndex = inputs.indexOf(input);
-    const cols = parseInt(input.dataset.cols) || 3;
+    if (currentIndex === -1) return;
+    
+    const cols = parseInt(input.dataset.cols) || inputs.length; // 矩阵列数，向量时为总长度
     let nextIndex = -1;
 
-    if (e.key === 'ArrowRight') {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        nextIndex = currentIndex + 1;
+        
+        // 如果已到当前容器的最后一个输入框
+        if (nextIndex >= inputs.length) {
+            // 尝试跳转到下一个容器
+            const allContainers = getInputContainersForCurrentTab();
+            
+            // 找到当前容器在列表中的位置
+            let currentContainerId;
+            if (isVectorInput) {
+                currentContainerId = input.dataset.containerId;
+            } else {
+                const table = input.closest('table');
+                currentContainerId = table?.parentElement?.id || '';
+            }
+            
+            const containerIdx = allContainers.findIndex(c => c.containerId === currentContainerId);
+            
+            // 如果还有下一个容器
+            if (containerIdx >= 0 && containerIdx < allContainers.length - 1) {
+                // 找下一个容器的第一个可聚焦输入框
+                const nextContainer = allContainers[containerIdx + 1];
+                let nextInput = null;
+                
+                if (nextContainer.type === 'scalar') {
+                    // 标量输入
+                    nextInput = document.getElementById(nextContainer.containerId);
+                } else if (nextContainer.type === 'matrix') {
+                    const tbl = document.querySelector(`#${nextContainer.containerId} .matrix-input-table`);
+                    nextInput = tbl?.querySelector('.matrix-cell-input');
+                } else if (nextContainer.type === 'vector') {
+                    const vc = document.getElementById(nextContainer.containerId);
+                    nextInput = vc?.querySelector('.vector-cell-input');
+                }
+                
+                if (nextInput) {
+                    nextInput.focus();
+                    nextInput.select();
+                    return;
+                }
+            } else {
+                // 已是最后一个容器的最后一个输入框 → 触发计算
+                const calcBtnId = getCalculateButtonForCurrentTab();
+                const calcBtn = calcBtnId ? document.getElementById(calcBtnId) : null;
+                if (calcBtn) {
+                    calcBtn.click();
+                    return;
+                }
+                // 没有计算按钮则循环回第一个
+                nextIndex = 0;
+            }
+        }
+    } else if (!isVectorInput && e.key === 'ArrowRight') {
         e.preventDefault();
         nextIndex = currentIndex + 1;
         if (nextIndex >= inputs.length) nextIndex = 0;
-    } else if (e.key === 'ArrowDown') {
+    } else if (!isVectorInput && e.key === 'ArrowDown') {
         e.preventDefault();
         nextIndex = currentIndex + cols;
         if (nextIndex >= inputs.length) nextIndex = currentIndex % cols;
-    } else if (e.key === 'ArrowUp') {
+    } else if (!isVectorInput && e.key === 'ArrowUp') {
         e.preventDefault();
         nextIndex = currentIndex - cols;
         if (nextIndex < 0) nextIndex = inputs.length - cols + (currentIndex % cols);
@@ -137,6 +320,27 @@ function createVectorInput(containerId, length, defaultValue = '') {
     if (!container) return;
     container.innerHTML = '';
 
+    // 清空按钮区域
+    const toolbar = document.createElement('div');
+    toolbar.className = 'flex justify-end mb-1';
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'text-xs text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors flex items-center gap-0.5 px-2 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700';
+    clearBtn.title = window.i18n ? window.i18n.t('clear') : '清空';
+    clearBtn.innerHTML = '<i class="fa fa-times"></i>';
+    clearBtn.addEventListener('click', () => {
+        const vc = container.querySelector('.vector-input-container');
+        if (vc) {
+            vc.querySelectorAll('.vector-cell-input').forEach(input => {
+                input.value = '';
+                input.focus();
+            });
+        }
+        saveTabState(currentTab);
+    });
+    toolbar.appendChild(clearBtn);
+    container.appendChild(toolbar);
+
     const div = document.createElement('div');
     div.className = 'vector-input-container';
     for (let i = 0; i < length; i++) {
@@ -146,6 +350,10 @@ function createVectorInput(containerId, length, defaultValue = '') {
         input.id = `${containerId}-${i}`;
         input.value = defaultValue;
         input.dataset.index = i;
+        // 为向量输入框也添加回车跳转和方向键导航
+        input.dataset.containerType = 'vector';
+        input.dataset.containerId = containerId;
+        input.addEventListener('keydown', handleMatrixKeyNav);
         div.appendChild(input);
     }
     container.appendChild(div);
@@ -306,7 +514,7 @@ function addToHistory(type, input, result) {
         id: Date.now(),
         type,
         input,
-        result,
+        result, // 保留原始结果用于兼容性
         timestamp: new Date().toLocaleString(navigator.language)
     };
     calculationHistory.unshift(historyItem);
@@ -318,7 +526,7 @@ function addToHistory(type, input, result) {
 }
 
 /**
- * 更新历史记录显示
+ * 更新历史记录显示（支持语言切换时动态翻译）
  */
 function updateHistoryDisplay() {
     const historyList = document.getElementById('history-list');
@@ -334,6 +542,7 @@ function updateHistoryDisplay() {
         const historyItem = document.createElement('div');
         historyItem.className = 'history-item';
 
+        // 使用当前语言生成类型标签
         let inputDisplay = '';
         switch (item.type) {
             case 'determinant':
@@ -352,18 +561,124 @@ function updateHistoryDisplay() {
                 inputDisplay = item.type;
         }
 
+        // 使用当前语言生成结果文字
+        let resultDisplay = translateHistoryResult(item);
+
         historyItem.innerHTML = `
             <div class="history-item-header">
                 <span class="history-item-type">${inputDisplay}</span>
                 <span class="history-item-time">${item.timestamp}</span>
             </div>
-            <div class="history-item-result">${item.result}</div>
+            <div class="history-item-result">${resultDisplay}</div>
         `;
         historyItem.addEventListener('click', () => {
             if (typeof loadFromHistory === 'function') loadFromHistory(item);
         });
         historyList.appendChild(historyItem);
     });
+}
+
+/**
+ * 根据历史记录条目，使用当前语言翻译结果文字
+ */
+function translateHistoryResult(item) {
+    if (!window.i18n) return item.result || '';
+    
+    const i18n = window.i18n;
+    const r = item.result || '';
+    
+    // 根据类型和结果内容模式，用当前语言重新生成结果文字
+    try {
+        switch (item.type) {
+            case 'determinant': {
+                // 格式: "计算行列式 = X" 或 "Determinant Result = X"
+                const match = r.match(/[=＝]\s*(.+)$/);
+                const val = match ? match[1].trim() : '';
+                return `${i18n.t('calculate-determinant')} = ${val}`;
+            }
+            case 'matrix-operation': {
+                const op = item.input?.operation;
+                // 矩阵运算结果显示
+                if (op === 'eigen' || r.includes(i18n.translations.zh['result-eigenvalues']) || r.includes(i18n.translations.en['result-eigenvalues']) || r.includes('特征值')) {
+                    return i18n.t('op-eigen');
+                }
+                if (r.includes('=') && !r.includes(i18n.translations[i18n.currentLang]['matrix'])) {
+                    // 标量结果格式: "秩 = 2" 等
+                    const match = r.match(/^(.+?)\s*[=＝]\s*(.+)$/);
+                    if (match) {
+                        const opName = getOperationName(op);
+                        return `${opName} = ${match[2]}`;
+                    }
+                }
+                // 矩阵结果（只有操作名）
+                return i18n.tf('history-matrix-op', { op: getOperationName(op) });
+            }
+            case 'vector-operation': {
+                const op = item.input?.operation;
+                if (r.includes('✓') || r.includes('✗')) {
+                    // 正交性检验结果
+                    if (r.includes(i18n.translations.zh['result-orthogonal']) || r.includes(i18n.translations.en['result-orthogonal']) ||
+                        r.includes('正交') || r.includes('Orthogonal')) {
+                        return `${i18n.t('orthogonality')}：${i18n.t(r.includes('✓') ? 'result-orthogonal' : 'result-not-orthogonal')}`;
+                    }
+                }
+                if (r.includes('=') && !r.includes(i18n.translations[i18n.currentLang]['vector'])) {
+                    const match = r.match(/^(.+?)\s*[=＝]\s*(.+)$/);
+                    if (match) return `${getOperationName(op)} = ${match[2]}`;
+                }
+                return i18n.tf('history-vector-op', { op: getOperationName(op) });
+            }
+            case 'linear-system': {
+                // 唯一解 / 无解 / 无穷多解
+                if (r.includes('✓') || r === i18n.translations.zh['result-unique-solution'] || r === i18n.translations.en['result-unique-solution'] || r.includes('唯一解') || r.includes('Unique')) {
+                    return `✓ ${i18n.t('result-unique-solution')}`;
+                }
+                if (r.includes('✗') || r === i18n.translations.zh['result-no-solution'] || r === i18n.translations.en['result-no-solution'] || r.includes('无解') || r.includes('No Solution')) {
+                    return `✗ ${i18n.t('result-no-solution')}`;
+                }
+                if (r.includes('∞') || r.includes('无穷多') || r.includes('Infinite')) {
+                    const rankMatch = r.match(/rank[=＝](\d+)/i) || r.match(/秩[=＝](\d+)/);
+                    const rank = rankMatch ? rankMatch[1] : '?';
+                    return `∞ ${i18n.t('result-infinite-solutions')}（${i18n.t('op-rank')}=${rank}）`;
+                }
+                return r;
+            }
+            case 'vector-group': {
+                const op = item.input?.operation;
+                if (r.includes('线性相关') || r.includes('Linearly Dependent') || r.includes(i18n.translations.zh['result-linear-dep']) || r.includes(i18n.translations.en['result-linear-dep'])) {
+                    return `${i18n.t('op-linear-dependency')}：${i18n.t('result-linear-dep')}`;
+                }
+                if (r.includes('线性无关') || r.includes('Linearly Independent') || r.includes(i18n.translations.zh['result-linear-indep']) || r.includes(i18n.translations.en['result-linear-indep'])) {
+                    return `${i18n.t('op-linear-dependency')}：${i18n.t('result-linear-indep')}`;
+                }
+                if (r.includes('=') && !isNaN(parseInt(r.split('=')[1]))) {
+                    const match = r.match(/^(.+?)[=＝](\d+)$/);
+                    if (match) return `${i18n.t('op-rank')} = ${match[2]}`;
+                }
+                if (op === 'schmidt' || r.includes('施密特') || r.includes('Schmidt')) {
+                    return i18n.t('op-schmidt');
+                }
+                if (op === 'max-independent' || r.includes('极大') || r.includes('Max')) {
+                    return i18n.t('op-max-independent');
+                }
+                return i18n.tf('history-vector-group', { op: getOperationName(op) });
+            }
+            case 'quadratic-form': {
+                const op = item.input?.operation;
+                if (r.includes('正定') || r.includes('Positive') || r.includes(i18n.translations.zh['result-positive-def']) || r.includes(i18n.translations.en['result-positive-def'])) {
+                    return `${i18n.t('op-positive-definite')}：${i18n.t('result-positive-def')}`;
+                }
+                if (r.includes('不正定') || r.includes('Not Positive')) {
+                    return `${i18n.t('op-positive-definite')}：${i18n.t('result-not-positive-def')}`;
+                }
+                return i18n.tf('history-quadratic-form', { op: getOperationName(op) });
+            }
+            default:
+                return r;
+        }
+    } catch(e) {
+        return r;
+    }
 }
 
 /**
