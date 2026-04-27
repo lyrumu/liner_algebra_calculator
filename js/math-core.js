@@ -4,6 +4,117 @@
  * 所有计算使用分数类进行精确运算
  */
 
+// ==================== 分数优化工具 ====================
+
+/**
+ * 将浮点数转换为简洁的有理分数（使用连分数逼近）
+ * 避免浮点误差导致的超大分子分母
+ * @param {number} val - 浮点数值
+ * @param {number} maxDenominator - 最大分母限制（默认10000）
+ * @returns {Fraction} 简洁的分数表示
+ */
+function simplifyFraction(val, maxDenominator = 100) {
+    if (val === 0) return new Fraction(0);
+    if (!isFinite(val)) return new Fraction(val > 0 ? 1 : -1);
+    
+    // 先尝试简单比例
+    const absVal = Math.abs(val);
+    // 检查常见简单分数（快速路径）
+    const commonFractions = [
+        [0, 1], [1, 12], [1, 10], [1, 9], [1, 8], [1, 7], [1, 6],
+        [1, 5], [1, 4], [1, 3], [2, 5], [3, 8], [2, 7],
+        [3, 7], [4, 9], [1, 2], [5, 9], [4, 7], [3, 5],
+        [5, 8], [2, 3], [5, 7], [3, 4], [4, 5], [5, 6]
+    ];
+    
+    let bestNum = Math.round(val);
+    let bestDen = 1;
+    let bestError = absVal - Math.abs(bestNum / bestDen);
+    
+    for (const [n, d] of commonFractions) {
+        const approx = n / d;
+        const error = Math.abs(absVal - approx);
+        if (error < bestError || (error < 0.01 && d < bestDen)) {
+            bestError = error;
+            bestNum = n * (val >= 0 ? 1 : -1);
+            bestDen = d;
+            // 如果误差足够小，直接返回
+            if (error < 1e-8) break;
+        }
+    }
+    
+    // 如果常见分数不够精确，使用连分数逼近
+    if (bestError > 1e-6 && maxDenominator > 20) {
+        try {
+            const cfResult = continuedFractionApprox(val, maxDenominator);
+            const cfError = Math.abs(absVal - Math.abs(cfResult.valueOf()));
+            if (cfError <= bestError + 1e-8) {
+                return cfResult;
+            }
+        } catch(e) {
+            // 连分数失败时回退到最佳结果
+        }
+    }
+    
+    return new Fraction(bestNum, bestDen);
+}
+
+/**
+ * 连分数逼近算法
+ * 将浮点数转换为接近的最简分数
+ */
+function continuedFractionApprox(val, maxDenom) {
+    if (Math.abs(val) < 1e-15) return new Fraction(0);
+    
+    let x = Math.abs(val);
+    const sign = val >= 0 ? 1 : -1;
+    
+    let hPrev = 0, kPrev = 1;
+    let hCurr = 1, kCurr = 0;
+    
+    for (let iter = 0; iter < 50; iter++) {
+        const a = Math.floor(x);
+        
+        // 计算下一个收敛项
+        const hNext = a * hCurr + hPrev;
+        const kNext = a * kCurr + kPrev;
+        
+        hPrev = hCurr; kPrev = kCurr;
+        hCurr = hNext; kCurr = kNext;
+        
+        // 检查是否超出分母限制
+        if (kCurr > maxDenom) {
+            // 回退到前一个收敛项
+            return sign > 0 ? new Fraction(hPrev, kPrev) : new Fraction(-hPrev, kPrev);
+        }
+        
+        const remainder = x - a;
+        if (remainder < 1e-15) break;
+        x = 1 / remainder;
+    }
+    
+    return sign > 0 ? new Fraction(hCurr, kCurr) : new Fraction(-hCurr, kCurr);
+}
+
+/**
+ * 优化的toFraction函数，优先产生简洁分数
+ */
+function toFractionOptimized(value, maxDenom = 10000) {
+    if (value instanceof Fraction) return value;
+    if (typeof value === 'string') {
+        try { return Fraction.fromString(value); } 
+        catch (e) { return simplifyFraction(parseFloat(value) || 0, maxDenom); }
+    }
+    if (typeof value === 'number') {
+        // 整数或接近整数的情况
+        if (Number.isInteger(value) || Math.abs(value - Math.round(value)) < 1e-10) {
+            return new Fraction(Math.round(value));
+        }
+        return simplifyFraction(value, maxDenom);
+    }
+    return new Fraction(value);
+}
+
 // ==================== 行列式计算 ====================
 
 /**
@@ -242,12 +353,18 @@ function inverseMatrix(matrix) {
         }
     }
     
-    // 提取逆矩阵
+    // 提取逆矩阵（对每个元素进行简化，避免超大分数）
     const invMatrix = [];
     for (let i = 0; i < n; i++) {
         invMatrix[i] = [];
         for (let j = n; j < 2 * n; j++) {
-            invMatrix[i].push(augMatrix[i][j]);
+            const val = augMatrix[i][j];
+            // 对大分母的分数进行简化逼近
+            if (val.denominator > 100 || val.numerator > 100) {
+                invMatrix[i].push(simplifyFraction(val.valueOf(), 50));
+            } else {
+                invMatrix[i].push(val);
+            }
         }
     }
     
@@ -273,7 +390,13 @@ function adjugateMatrix(matrix) {
             const minor = getMinor(matrix, i, j);
             const minorDet = determinant(minor);
             const sign = (i + j) % 2 === 0 ? 1 : -1;
-            cofactorMatrix[i][j] = minorDet.multiply(new Fraction(sign));
+            const val = minorDet.multiply(new Fraction(sign));
+            // 简化大分数
+            if (val.denominator > 100 || val.numerator > 100) {
+                cofactorMatrix[i][j] = simplifyFraction(val.valueOf(), 50);
+            } else {
+                cofactorMatrix[i][j] = val;
+            }
         }
     }
     
@@ -385,7 +508,7 @@ function eigenValues(matrix) {
         // 2x2: λ² - tr(A)λ + det(A) = 0
         const tr = matrix[0][0].add(matrix[1][1]);
         const det = determinant(matrix);
-        const a = 1, b = tr.negate(), c = det;
+        const a = new Fraction(1), b = tr.negate(), c = det;
         
         // 求判别式
         const disc = b.multiply(b).subtract(a.multiply(c).multiply(new Fraction(4)));
@@ -785,16 +908,16 @@ function maxIndependentSet(vectors) {
         [rref[r], rref[i]] = [rref[i], rref[r]];
         
         const pivot = rref[r][lead];
-        for (let j = lead; j < m; j++) {
-            rref[r][j] = toFraction(rref[r][j].valueOf() / pivot.valueOf());
-        }
-        
-        for (let i = 0; i < vectors.length; i++) {
-            if (i !== r && Math.abs(rref[i][lead].valueOf()) > 1e-10) {
-                const factor = rref[i][lead].valueOf();
-                for (let j = lead; j < m; j++) {
-                    rref[i][j] = toFraction(rref[i][j].valueOf() - factor * rref[r][j].valueOf());
-                }
+            for (let j = lead; j < m; j++) {
+                rref[r][j] = simplifyFraction(rref[r][j].valueOf() / pivot.valueOf());
+            }
+            
+            for (let i = 0; i < vectors.length; i++) {
+                if (i !== r && Math.abs(rref[i][lead].valueOf()) > 1e-10) {
+                    const factor = rref[i][lead].valueOf();
+                    for (let j = lead; j < m; j++) {
+                        rref[i][j] = simplifyFraction(rref[i][j].valueOf() - factor * rref[r][j].valueOf());
+                    }
             }
         }
         
@@ -853,10 +976,15 @@ function schmidtOrthogonalization(vectors) {
         }
     }
     
-    // 单位化
+    // 单位化（使用连分数逼近，避免大分子分母）
     const orthonormalVectors = orthogonalVectors.map(vector => {
         const len = vectorLength(vector);
-        return scalarMultiplyVector(vector, 1 / len);
+        if (Math.abs(len) < 1e-10) return vector;
+        return vector.map(v => {
+            const val = v.valueOf() / len;
+            // 使用更激进的小分母限制，产生简洁的分数或转为小数
+            return simplifyFraction(val, 50);
+        });
     });
     
     return { orthogonal: orthogonalVectors, orthonormal: orthonormalVectors };
@@ -893,7 +1021,7 @@ function makeSymmetric(matrix) {
             if (i === j) {
                 symmetric[i][j] = matrix[i][j];
             } else {
-                symmetric[i][j] = toFraction((matrix[i][j].valueOf() + matrix[j][i].valueOf()) / 2);
+                symmetric[i][j] = simplifyFraction((matrix[i][j].valueOf() + matrix[j][i].valueOf()) / 2);
             }
         }
     }
@@ -923,9 +1051,23 @@ function standardForm(matrix) {
     
     for (let i = 0; i < Math.min(n, eigenvalues.length); i++) {
         if (typeof eigenvalues[i] === 'object' && 'real' in eigenvalues[i]) {
-            standardMatrix[i][i] = toFraction(eigenvalues[i].real);
+            const val = toFraction(eigenvalues[i].real);
+            // 简化大分数 - 使用更小的分母限制
+            if (val.denominator > 100 || val.numerator > 100) {
+                standardMatrix[i][i] = simplifyFraction(val.valueOf(), 50);
+            } else {
+                standardMatrix[i][i] = val;
+            }
+        } else if (typeof eigenvalues[i] === 'number') {
+            const evVal = toFraction(eigenvalues[i]);
+            // 使用更小的分母限制
+            if (evVal.denominator > 100 || evVal.numerator > 100) {
+                standardMatrix[i][i] = simplifyFraction(evVal.valueOf(), 50);
+            } else {
+                standardMatrix[i][i] = evVal;
+            }
         } else {
-            standardMatrix[i][i] = toFraction(eigenvalues[i]);
+            standardMatrix[i][i] = eigenvalues[i];
         }
     }
     
