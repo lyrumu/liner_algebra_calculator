@@ -16,6 +16,7 @@ const i18n = {
             'vector-group': '向量组',
             'quadratic-form': '二次型',
             'history': '历史记录',
+            'operations': '运算',
 
             // 标题
             'title': '线性代数计算器',
@@ -255,6 +256,7 @@ const i18n = {
             'vector-group': 'Vector Groups',
             'quadratic-form': 'Quadratic Forms',
             'history': 'History',
+            'operations': 'Operations',
 
             // 标题
             'title': 'Linear Algebra Calculator',
@@ -586,6 +588,749 @@ const i18n = {
             const uvSpan = document.getElementById('busuanzi_value_site_uv');
             const peopleText = this.t('people');
             visitorsSpan.innerHTML = `${this.t('visitors')} <span id="busuanzi_value_site_uv">${uvSpan ? uvSpan.textContent : ''}</span> ${peopleText}`;
+        }
+
+        // 重新渲染动态内容（运算结果和步骤）
+        if (typeof lastCalculationState !== 'undefined' && lastCalculationState) {
+            this.reRenderDynamicContent();
+        }
+
+        // 重新渲染历史记录（支持语言切换时更新历史记录文字）
+        if (typeof updateHistoryDisplay === 'function') {
+            updateHistoryDisplay();
+        }
+    },
+
+    /**
+     * 重新渲染动态内容（语言切换后更新运算结果和步骤）
+     */
+    reRenderDynamicContent() {
+        if (!lastCalculationState) return;
+
+        // 更新结果显示区域的静态文本
+        const resultContainer = document.getElementById('result-container');
+        if (resultContainer) {
+            // 更新结果卡片中的标题文本
+            resultContainer.querySelectorAll('h3').forEach(h3 => {
+                const text = h3.textContent.trim();
+                // 匹配并替换常见的国际化文本
+                Object.keys(this.translations[this.currentLang]).forEach(key => {
+                    const zhText = this.translations['zh'][key];
+                    const enText = this.translations['en'][key];
+                    if (zhText && enText && zhText !== enText) {
+                        if (this.currentLang === 'en' && text === zhText) {
+                            h3.textContent = enText;
+                        } else if (this.currentLang === 'zh' && text === enText) {
+                            h3.textContent = zhText;
+                        }
+                    }
+                });
+            });
+        }
+
+        // 更新步骤容器中的静态文本
+        const stepsContainer = document.getElementById('steps-container');
+        if (stepsContainer && !stepsContainer.classList.contains('hidden')) {
+            stepsContainer.querySelectorAll('.step-content, p').forEach(p => {
+                const html = p.innerHTML;
+                // 更新步骤中的常见文本模式
+                let updated = html;
+                
+                // 更新唯一解/无解等状态文本
+                const textMap = [
+                    [this.translations.zh['result-unique-solution'] || '', this.translations.en['result-unique-solution'] || ''],
+                    [this.translations.zh['result-no-solution'] || '', this.translations.en['result-no-solution'] || ''],
+                    [this.translations.zh['result-infinite-solutions'] || '', this.translations.en['result-infinite-solutions'] || ''],
+                    [this.translations.zh['step-unique-solution'] || '', this.translations.en['step-unique-solution'] || ''],
+                    [this.translations.zh['step-no-solution'] || '', this.translations.en['step-no-solution'] || ''],
+                    [this.translations.zh['step-linear-dependent'] || '', this.translations.en['step-linear-dependent'] || ''],
+                    [this.translations.zh['step-linear-independent'] || '', this.translations.en['step-linear-independent'] || ''],
+                    [this.translations.zh['step-positive-definite-result'] || '', this.translations.en['step-positive-definite-result'] || ''],
+                    [this.translations.zh['step-not-positive-definite'] || '', this.translations.en['step-not-positive-definite'] || ''],
+                    [this.translations.zh['step-orthogonalized'] || '', this.translations.en['step-orthogonalized'] || ''],
+                    [this.translations.zh['step-normalized'] || '', this.translations.en['step-normalized'] || ''],
+                    [this.translations.zh['step-general-solution'] || '', this.translations.en['step-general-solution'] || ''],
+                    [this.translations.zh['step-lu-solution'] || '', this.translations.en['step-lu-solution'] || ''],
+                    [this.translations.zh['step-eigenvalues'] || '', this.translations.en['step-eigenvalues'] || ''],
+                    [this.translations.zh['step-linear-system'] || '', this.translations.en['step-linear-system'] || ''],
+                    [this.translations.zh['step-input-matrix'] || '', this.translations.en['step-input-matrix'] || ''],
+                    [this.translations.zh['result-orthogonal'] || '', this.translations.en['result-orthogonal'] || ''],
+                    [this.translations.zh['result-not-orthogonal'] || '', this.translations.en['result-not-orthogonal'] || ''],
+                    [this.translations.zh['result-linear-dep'] || '', this.translations.en['result-linear-indep'] || ''],
+                    [this.translations.zh['result-positive-def'] || '', this.translations.en['result-positive-def'] || ''],
+                    [this.translations.zh['result-not-positive-def'] || '', this.translations.en['result-not-positive-def'] || ''],
+                ];
+                
+                textMap.forEach(([zh, en]) => {
+                    if (zh && en && zh !== en) {
+                        if (this.currentLang === 'en') {
+                            updated = updated.replace(new RegExp(zh.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), en);
+                        } else {
+                            updated = updated.replace(new RegExp(en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), zh);
+                        }
+                    }
+                });
+                
+                if (updated !== html) {
+                    p.innerHTML = updated;
+                }
+            });
+        }
+
+        // 更新显示/隐藏步骤按钮文字
+        const toggleStepsBtn = document.getElementById('toggle-steps');
+        if (toggleStepsBtn) {
+            const showText = this.t('show-steps');
+            const hideText = this.t('hide-steps');
+            const isHidden = stepsContainer ? stepsContainer.classList.contains('hidden') : true;
+            toggleStepsBtn.innerHTML = `<span>${isHidden ? showText : hideText}</span><i class="fa fa-chevron-${isHidden ? 'down' : 'up'} ml-1"></i>`;
+        }
+
+        // 如果存在缓存的状态，尝试重新触发计算来完整刷新
+        if (lastCalculationState && typeof this.recalcAndRender === 'function') {
+            try {
+                this.recalcAndRender(lastCalculationState);
+            } catch(e) {
+                console.warn('重新渲染动态内容时出错:', e);
+            }
+        }
+    },
+
+    /**
+     * 根据缓存状态重新渲染运算结果
+     */
+    recalcAndRender(state) {
+        if (!state) return;
+        
+        try {
+            switch (state.type) {
+                case 'determinant':
+                    this.recalcDeterminant(state);
+                    break;
+                case 'matrix':
+                    this.recalcMatrix(state);
+                    break;
+                case 'vector':
+                    this.recalcVector(state);
+                    break;
+                case 'linear-system':
+                    this.recalcLinearSystem(state);
+                    break;
+                case 'vector-group':
+                    this.recalcVectorGroup(state);
+                    break;
+                case 'quadratic-form':
+                    this.recalcQuadraticForm(state);
+                    break;
+            }
+        } catch(e) {
+            console.warn('重新计算出错:', e);
+        }
+    },
+
+    // 以下是根据缓存状态重新渲染各模块的方法
+    recalcDeterminant(state) {
+        const matrix = state.matrix.map(row => row.map(v => typeof v === 'object' && v.valueOf ? v.valueOf() : v));
+        
+        clearSteps('steps-container');
+        addStep(`<p>${this.tf('step-input-matrix', { rows: state.rows, cols: state.cols })}</p><div id="step-matrix"></div>`, 'steps-container');
+        displayMatrix(matrix, 'step-matrix');
+        
+        const result = determinant(matrix);
+        addStep(`<p>det(A) = <strong>${formatNumber(result)}</strong></p>`, 'steps-container');
+        
+        showResult(`
+            <div class="result-card">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${this.t('result-determinant')}</h3>
+                <p class="text-3xl font-bold text-primary text-center">${formatNumber(result)}</p>
+            </div>
+        `);
+    },
+
+    recalcMatrix(state) {
+        const operation = state.operation;
+        const matrixA = state.matrixA.map(row => row.map(v => typeof v === 'object' && v.valueOf ? v.valueOf() : v));
+        
+        clearSteps('steps-container');
+        addStep(`<p>${this.tf('step-matrix-a', { rows: state.rowsA, cols: state.colsA })}</p><div id="step-matrix-a"></div>`, 'steps-container');
+        displayMatrix(matrixA, 'step-matrix-a');
+        
+        let result;
+        
+        switch (operation) {
+            case 'add': {
+                const matrixB = state.matrixB.map(r => r.map(v => typeof v === 'object' && v.valueOf ? v.valueOf() : v));
+                addStep(`<p>${this.tf('step-matrix-b', { rows: state.rowsB, cols: state.colsB })}</p><div id="step-matrix-b"></div>`, 'steps-container');
+                displayMatrix(matrixB, 'step-matrix-b');
+                result = addMatrices(matrixA, matrixB);
+                addStep(`<p>A + B = </p><div id="step-result"></div>`, 'steps-container');
+                displayMatrix(result, 'step-result');
+                break;
+            }
+            case 'subtract': {
+                const matrixB = state.matrixB.map(r => r.map(v => typeof v === 'object' && v.valueOf ? v.valueOf() : v));
+                addStep(`<p>${this.tf('step-matrix-b', { rows: state.rowsB, cols: state.colsB })}</p><div id="step-matrix-b"></div>`, 'steps-container');
+                displayMatrix(matrixB, 'step-matrix-b');
+                result = subtractMatrices(matrixA, matrixB);
+                addStep(`<p>A - B = </p><div id="step-result"></div>`, 'steps-container');
+                displayMatrix(result, 'step-result');
+                break;
+            }
+            case 'multiply': {
+                const matrixB = state.matrixB.map(r => r.map(v => typeof v === 'object' && v.valueOf ? v.valueOf() : v));
+                addStep(`<p>${this.tf('step-matrix-b', { rows: state.rowsB, cols: state.colsB })}</p><div id="step-matrix-b"></div>`, 'steps-container');
+                displayMatrix(matrixB, 'step-matrix-b');
+                result = multiplyMatrices(matrixA, matrixB);
+                addStep(`<p>A × B = </p><div id="step-result"></div>`, 'steps-container');
+                displayMatrix(result, 'step-result');
+                break;
+            }
+            case 'scalar-multiply': {
+                addStep(`<p>${this.tf('step-scalar-k', { value: formatNumber(state.scalar) })}</p>`, 'steps-container');
+                result = scalarMultiplyMatrix(matrixA, state.scalar);
+                addStep(`<p>k × A = </p><div id="step-result"></div>`, 'steps-container');
+                displayMatrix(result, 'step-result');
+                break;
+            }
+            case 'transpose': {
+                result = transposeMatrix(matrixA);
+                addStep(`<p>A^T = </p><div id="step-result"></div>`, 'steps-container');
+                displayMatrix(result, 'step-result');
+                break;
+            }
+            case 'inverse': {
+                result = inverseMatrix(matrixA);
+                addStep(`<p>A^(-1) = </p><div id="step-result"></div>`, 'steps-container');
+                displayMatrix(result, 'step-result');
+                break;
+            }
+            case 'adjugate': {
+                result = adjugateMatrix(matrixA);
+                addStep(`<p>adj(A) = </p><div id="step-result"></div>`, 'steps-container');
+                displayMatrix(result, 'step-result');
+                break;
+            }
+            case 'rank': {
+                result = matrixRank(matrixA);
+                addStep(`<p>rank(A) = <strong>${result}</strong></p>`, 'steps-container');
+                break;
+            }
+            case 'trace': {
+                result = matrixTrace(matrixA);
+                addStep(`<p>tr(A) = <strong>${formatNumber(result)}</strong></p>`, 'steps-container');
+                break;
+            }
+            case 'eigen': {
+                const eigenvalues = eigenValues(matrixA);
+                let eigenDisplay = `<p>${this.t('step-eigenvalues')}</p><ul class="list-disc list-inside space-y-1">`;
+                eigenvalues.forEach((ev, index) => {
+                    if (typeof ev === 'object' && 'real' in ev) {
+                        const sign = ev.imag >= 0 ? '+' : '';
+                        eigenDisplay += `<li>λ<sub>${index + 1}</sub> = ${formatNumber(ev.real)} ${sign}${formatNumber(ev.imag)}i</li>`;
+                    } else {
+                        eigenDisplay += `<li>λ<sub>${index + 1}</sub> = ${formatNumber(ev)}</li>`;
+                    }
+                });
+                eigenDisplay += '</ul>';
+                addStep(eigenDisplay, 'steps-container');
+                result = eigenvalues;
+                break;
+            }
+        }
+        
+        // 显示结果
+        if (Array.isArray(result) && Array.isArray(result[0])) {
+            showResult(`
+                <div class="result-card">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${this.tf('result-matrix-op', { op: getOperationName(operation) })}</h3>
+                    <div id="result-matrix"></div>
+                </div>
+            `);
+            displayMatrix(result, 'result-matrix');
+        } else if (Array.isArray(result)) {
+            let resultDisplay = '<ul class="list-disc list-inside space-y-1">';
+            result.forEach((ev, index) => {
+                if (typeof ev === 'object' && 'real' in ev) {
+                    const sign = ev.imag >= 0 ? '+' : '';
+                    resultDisplay += `<li>λ<sub>${index + 1}</sub> = ${formatNumber(ev.real)} ${sign}${formatNumber(ev.imag)}i</li>`;
+                } else {
+                    resultDisplay += `<li>λ<sub>${index + 1}</sub> = ${formatNumber(ev)}</li>`;
+                }
+            });
+            resultDisplay += '</ul>';
+            showResult(`
+                <div class="result-card">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${this.t('result-eigenvalues')}</h3>
+                    ${resultDisplay}
+                </div>
+            `);
+        } else {
+            showResult(`
+                <div class="result-card">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${this.t('result-calculation')}</h3>
+                    <p class="text-3xl font-bold text-primary text-center">${formatNumber(result)}</p>
+                </div>
+            `);
+        }
+    },
+
+    recalcVector(state) {
+        const operation = state.operation;
+        const vectorU = state.vectorU.map(v => typeof v === 'object' && v.valueOf ? v.valueOf() : v);
+        
+        clearSteps('steps-container');
+        addStep(`<p>${this.tf('step-vector-u', { dim: state.lengthU })}</p><div id="step-vector-u"></div>`, 'steps-container');
+        displayVector(vectorU, 'step-vector-u');
+        
+        let result;
+        
+        switch (operation) {
+            case 'add': {
+                const vectorV = state.vectorV.map(v => typeof v === 'object' && v.valueOf ? v.valueOf() : v);
+                addStep(`<p>${this.tf('step-vector-v', { dim: state.lengthU })}</p><div id="step-vector-v"></div>`, 'steps-container');
+                displayVector(vectorV, 'step-vector-v');
+                result = addVectors(vectorU, vectorV);
+                addStep(`<p>u + v = </p><div id="step-result"></div>`, 'steps-container');
+                displayVector(result, 'step-result');
+                break;
+            }
+            case 'subtract': {
+                const vectorV = state.vectorV.map(v => typeof v === 'object' && v.valueOf ? v.valueOf() : v);
+                addStep(`<p>${this.tf('step-vector-v', { dim: state.lengthU })}</p><div id="step-vector-v"></div>`, 'steps-container');
+                displayVector(vectorV, 'step-vector-v');
+                result = subtractVectors(vectorU, vectorV);
+                addStep(`<p>u - v = </p><div id="step-result"></div>`, 'steps-container');
+                displayVector(result, 'step-result');
+                break;
+            }
+            case 'scalar-multiply': {
+                addStep(`<p>${this.tf('step-scalar-k', { value: formatNumber(state.scalar) })}</p>`, 'steps-container');
+                result = scalarMultiplyVector(vectorU, state.scalar);
+                addStep(`<p>k × u = </p><div id="step-result"></div>`, 'steps-container');
+                displayVector(result, 'step-result');
+                break;
+            }
+            case 'dot-product': {
+                const vectorV = state.vectorV.map(v => typeof v === 'object' && v.valueOf ? v.valueOf() : v);
+                addStep(`<p>${this.tf('step-vector-v', { dim: state.lengthU })}</p><div id="step-vector-v"></div>`, 'steps-container');
+                displayVector(vectorV, 'step-vector-v');
+                result = dotProduct(vectorU, vectorV);
+                addStep(`<p>u · v = <strong>${formatNumber(result)}</strong></p>`, 'steps-container');
+                break;
+            }
+            case 'cross-product': {
+                const vectorV = state.vectorV.map(v => typeof v === 'object' && v.valueOf ? v.valueOf() : v);
+                addStep(`<p>${this.tf('step-vector-v', { dim: 3 })}</p><div id="step-vector-v"></div>`, 'steps-container');
+                displayVector(vectorV, 'step-vector-v');
+                result = crossProduct(vectorU, vectorV);
+                addStep(`<p>u × v = </p><div id="step-result"></div>`, 'steps-container');
+                displayVector(result, 'step-result');
+                break;
+            }
+            case 'length': {
+                result = vectorLength(vectorU);
+                addStep(`<p>||u|| = <strong>${formatNumber(result)}</strong></p>`, 'steps-container');
+                break;
+            }
+            case 'angle': {
+                const vectorV = state.vectorV.map(v => typeof v === 'object' && v.valueOf ? v.valueOf() : v);
+                addStep(`<p>${this.tf('step-vector-v', { dim: state.lengthU })}</p><div id="step-vector-v"></div>`, 'steps-container');
+                displayVector(vectorV, 'step-vector-v');
+                const angleRad = vectorAngle(vectorU, vectorV);
+                const angleDeg = angleRad * 180 / Math.PI;
+                addStep(`<p>cos θ = (u·v) / (||u|| ||v||)</p>`, 'steps-container');
+                addStep(`<p>θ = <strong>${formatNumber(angleRad)}</strong> rad = <strong>${formatNumber(angleDeg)}</strong>°</p>`, 'steps-container');
+                result = angleDeg;
+                break;
+            }
+            case 'orthogonality': {
+                const vectorV = state.vectorV.map(v => typeof v === 'object' && v.valueOf ? v.valueOf() : v);
+                addStep(`<p>${this.tf('step-vector-v', { dim: state.lengthU })}</p><div id="step-vector-v"></div>`, 'steps-container');
+                displayVector(vectorV, 'step-vector-v');
+                const dot = dotProduct(vectorU, vectorV);
+                const isOrtho = areOrthogonal(vectorU, vectorV);
+                addStep(`<p>u · v = ${formatNumber(dot)}</p>`, 'steps-container');
+                addStep(`<p>${dot === 0 ? '✓' : '✗'} ${this.tf('step-orthogonal-check', { result: isOrtho ? this.t('result-orthogonal') : this.t('result-not-orthogonal') })}</p>`, 'steps-container');
+                result = isOrtho;
+                break;
+            }
+        }
+        
+        // 显示结果
+        if (Array.isArray(result)) {
+            showResult(`
+                <div class="result-card">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${this.tf('result-vector-op', { op: getOperationName(operation) })}</h3>
+                    <div id="result-vector"></div>
+                </div>
+            `);
+            displayVector(result, 'result-vector');
+        } else if (typeof result === 'boolean') {
+            showResult(`
+                <div class="result-card">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${this.t('result-orthogonality')}</h3>
+                    <p class="text-3xl font-bold text-center ${result ? 'text-green-600' : 'text-red-500'}">${result ? '✓ ' + this.t('result-orthogonal') : '✗ ' + this.t('result-not-orthogonal')}</p>
+                </div>
+            `);
+        } else {
+            showResult(`
+                <div class="result-card">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${this.t('result-calculation')}</h3>
+                    <p class="text-3xl font-bold text-primary text-center">${formatNumber(result)}</p>
+                </div>
+            `);
+        }
+    },
+
+    recalcLinearSystem(state) {
+        const coefficients = state.coefficients.map(r => r.map(v => typeof v === 'object' && v.valueOf ? v.valueOf() : v));
+        const constants = state.constants.map(v => typeof v === 'object' && v.valueOf ? v.valueOf() : v);
+        
+        clearSteps('steps-container');
+        
+        // 显示方程组
+        addStep(`<p>${this.t('step-linear-system')}</p><div class="mt-2 space-y-1">`, 'steps-container');
+        for (let i = 0; i < state.equations; i++) {
+            let terms = '';
+            for (let j = 0; j < state.variables; j++) {
+                const coeff = coefficients[i][j];
+                if (Math.abs(coeff) > 1e-10) {
+                    if (j > 0 && coeff > 0) terms += ' + ';
+                    else if (j > 0 && coeff < 0) terms += ' - ';
+                    
+                    const absCoeff = Math.abs(coeff);
+                    if (Math.abs(absCoeff - 1) > 1e-10) {
+                        terms += formatNumber(absCoeff);
+                    }
+                    terms += `x<sub>${j + 1}</sub>`;
+                }
+            }
+            addStep(`<p>${terms || '0'} = ${formatNumber(constants[i])}</p>`, 'steps-container');
+        }
+        addStep(`</div>`, 'steps-container');
+        
+        let result;
+        
+        switch (state.method) {
+            case 'gauss': {
+                result = gaussElimination(coefficients, constants);
+                
+                if (result.type === 'unique-solution') {
+                    let solStr = `<p>${this.t('step-unique-solution')}</p><ul class="list-disc list-inside space-y-1">`;
+                    result.solution.forEach((val, idx) => {
+                        solStr += `<li>x<sub>${idx + 1}</sub> = <strong>${formatNumber(val)}</strong></li>`;
+                    });
+                    solStr += '</ul>';
+                    addStep(solStr, 'steps-container');
+                } else if (result.type === 'no-solution') {
+                    addStep(`<p class="text-red-600 font-semibold">✗ ${this.t('step-no-solution')}</p>`, 'steps-container');
+                } else {
+                    addStep(`<p>${this.tf('step-infinite-solutions', { rank: result.rank, free: result.freeVariables })}</p>`, 'steps-container');
+                }
+                break;
+            }
+            
+            case 'lu': {
+                const { L, U } = luDecomposition(coefficients);
+                
+                addStep(`<p>L = </p><div id="step-l"></div>`, 'steps-container');
+                displayMatrix(L, 'step-l');
+                
+                addStep(`<p>U = </p><div id="step-u"></div>`, 'steps-container');
+                displayMatrix(U, 'step-u');
+                
+                const solution = solveWithLU(L, U, constants);
+                
+                let solStr = `<p>${this.t('step-lu-solution')}</p><ul class="list-disc list-inside space-y-1">`;
+                solution.forEach((val, idx) => {
+                    solStr += `<li>x<sub>${idx + 1}</sub> = <strong>${formatNumber(val)}</strong></li>`;
+                });
+                solStr += '</ul>';
+                addStep(solStr, 'steps-container');
+                
+                result = { type: 'unique-solution', solution };
+                break;
+            }
+            
+            case 'basis-solution':
+            case 'general-solution': {
+                result = gaussElimination(coefficients, constants);
+                
+                if (result.type === 'trivial-solution' || result.type === 'unique-solution') {
+                    let solStr = `<p>${this.t('step-unique-solution')}</p><ul class="list-disc list-inside space-y-1">`;
+                    result.solution.forEach((val, idx) => {
+                        solStr += `<li>x<sub>${idx + 1}</sub> = <strong>${formatNumber(val)}</strong></li>`;
+                    });
+                    solStr += '</ul>';
+                    addStep(solStr, 'steps-container');
+                } else if (result.type === 'no-solution') {
+                    addStep(`<p class="text-red-600 font-semibold">✗ ${this.t('result-no-solution')}</p>`, 'steps-container');
+                } else {
+                    addStep(`<p>${this.tf('step-infinite-solutions', { rank: result.rank, free: result.freeVariables })}</p>`, 'steps-container');
+                    addStep(`<p>${this.t('step-general-solution')}</p>`, 'steps-container');
+                }
+                break;
+            }
+        }
+        
+        // 显示结果
+        if (result.type === 'unique-solution') {
+            let solDisplay = '<ul class="list-disc list-inside space-y-2">';
+            result.solution.forEach((val, idx) => {
+                solDisplay += `<li class="text-lg">x<sub>${idx + 1}</sub> = <span class="font-mono font-semibold">${formatNumber(val)}</span></li>`;
+            });
+            solDisplay += '</ul>';
+            
+            showResult(`
+                <div class="result-card">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">✓ ${this.t('result-unique-solution')}</h3>
+                    ${solDisplay}
+                </div>
+            `);
+        } else if (result.type === 'no-solution') {
+            showResult(`
+                <div class="result-card border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800">
+                    <h3 class="text-lg font-semibold text-red-700 dark:text-red-400 mb-2">✗ ${this.t('result-no-solution')}</h3>
+                    <p class="text-red-600 dark:text-red-300">${this.t('result-no-solution-desc')}</p>
+                </div>
+            `);
+        } else {
+            showResult(`
+                <div class="result-card border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800">
+                    <h3 class="text-lg font-semibold text-yellow-700 dark:text-yellow-400 mb-3">∞ ${this.t('result-infinite-solutions')}</h3>
+                    <p class="text-gray-700 dark:text-gray-300">${this.tf('result-rank', { rank: result.rank })}</p>
+                    <p class="text-gray-700 dark:text-gray-300">${this.tf('result-free-vars', { free: result.freeVariables })}</p>
+                </div>
+            `);
+        }
+    },
+
+    recalcVectorGroup(state) {
+        const vectors = state.vectors.map(v => v.map(x => typeof x === 'object' && x.valueOf ? x.valueOf() : x));
+        
+        clearSteps('steps-container');
+        
+        addStep(`<p>${this.tf('step-vector-group', { count: state.vectorCount, dim: state.vectorDimension })}</p><div class="space-y-2 mt-2">`, 'steps-container');
+        vectors.forEach((vec, idx) => {
+            addStep(`<p>α<sub>${idx + 1}</sub> = </p><div id="step-vg-${idx}"></div>`, 'steps-container');
+            displayVector(vec, `step-vg-${idx}`);
+        });
+        addStep(`</div>`, 'steps-container');
+        
+        let result;
+        
+        switch (state.operation) {
+            case 'linear-dependency': {
+                const isDep = isLinearlyDependent(vectors);
+                const rank = vectorGroupRank(vectors);
+                
+                addStep(`<p>${this.tf('step-group-rank', { rank })}</p>`, 'steps-container');
+                addStep(`<p class="font-semibold">${rank < state.vectorCount ? '✓ ' + this.t('step-linear-dependent') : '✗ ' + this.t('step-linear-independent')}</p>`, 'steps-container');
+                
+                result = isDep;
+                break;
+            }
+            
+            case 'max-independent': {
+                const { vectors: maxIndVectors, indices } = maxIndependentSet(vectors);
+                
+                addStep(`<p>${this.tf('step-max-independent-set', { count: maxIndVectors.length })}</p><div class="space-y-2 mt-2">`, 'steps-container');
+                maxIndVectors.forEach((vec, idx) => {
+                    const origIdx = indices[idx] + 1;
+                    addStep(`<p>α<sub>${origIdx}</sub> = </p><div id="step-mi-${idx}"></div>`, 'steps-container');
+                    displayVector(vec, `step-mi-${idx}`);
+                });
+                addStep(`</div>`, 'steps-container');
+                
+                result = { vectors: maxIndVectors, indices };
+                break;
+            }
+            
+            case 'rank': {
+                const rank = vectorGroupRank(vectors);
+                addStep(`<p>${this.tf('step-group-rank', { rank })}</p>`, 'steps-container');
+                result = rank;
+                break;
+            }
+            
+            case 'schmidt': {
+                const { orthogonal, orthonormal } = schmidtOrthogonalization(vectors);
+                
+                addStep(`<p>${this.t('step-orthogonalized')}</p><div class="space-y-2 mt-2">`, 'steps-container');
+                orthogonal.forEach((vec, idx) => {
+                    addStep(`<p>β<sub>${idx + 1}</sub> = </p><div id="step-ortho-${idx}"></div>`, 'steps-container');
+                    displayVector(vec, `step-ortho-${idx}`);
+                });
+                addStep(`</div>`, 'steps-container');
+                
+                addStep(`<p>${this.t('step-normalized')}</p><div class="space-y-2 mt-2">`, 'steps-container');
+                orthonormal.forEach((vec, idx) => {
+                    addStep(`<p>γ<sub>${idx + 1}</sub> = </p><div id="step-on-${idx}"></div>`, 'steps-container');
+                    displayVector(vec, `step-on-${idx}`);
+                });
+                addStep(`</div>`, 'steps-container');
+                
+                result = { orthogonal, orthonormal };
+                break;
+            }
+        }
+        
+        // 显示结果
+        if (typeof result === 'boolean') {
+            showResult(`
+                <div class="result-card">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${this.t('result-linear-dep-analysis')}</h3>
+                    <p class="text-3xl font-bold text-center ${result ? 'text-orange-500' : 'text-green-600'}">${result ? this.t('result-linear-dep') : this.t('result-linear-indep')}</p>
+                </div>
+            `);
+        } else if (typeof result === 'number') {
+            showResult(`
+                <div class="result-card">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${this.t('result-group-rank')}</h3>
+                    <p class="text-3xl font-bold text-primary text-center">${result}</p>
+                </div>
+            `);
+        } else if (result.vectors && result.indices) {
+            let vecDisplay = '<ul class="list-disc list-inside space-y-1">';
+            result.indices.forEach(idx => {
+                vecDisplay += `<li>α<sub>${idx + 1}</sub></li>`;
+            });
+            vecDisplay += '</ul>';
+            
+            showResult(`
+                <div class="result-card">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${this.t('result-max-independent')}</h3>
+                    <p class="mb-2 text-gray-600 dark:text-gray-400">${this.tf('result-max-independent-desc', { count: result.vectors.length })}</p>
+                    ${vecDisplay}
+                </div>
+            `);
+        } else if (result.orthogonal && result.orthonormal) {
+            showResult(`
+                <div class="result-card">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${this.t('result-schmidt')}</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-2">${this.tf('result-orthogonalized', { count: result.orthogonal.length })}</p>
+                    <div id="schmidt-ortho" class="mb-4"></div>
+                    <p class="text-gray-600 mb-2">${this.tf('result-normalized', { count: result.orthonormal.length })}</p>
+                    <div id="schmidt-on"></div>
+                </div>
+            `);
+            
+            const showVec = (vecs, containerId) => {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                container.innerHTML = '<div class="result-vector-container space-y-2">';
+                vecs.slice(0, 3).forEach(v => {
+                    const row = document.createElement('div');
+                    row.className = 'flex gap-2';
+                    v.forEach(el => {
+                        const span = document.createElement('span');
+                        span.className = 'result-vector-cell';
+                        span.textContent = formatNumber(el);
+                        row.appendChild(span);
+                    });
+                    container.appendChild(row);
+                });
+                if (vecs.length > 3) {
+                    container.innerHTML += `<p class="text-gray-400 text-sm">...${this.tf('result-total-vectors', { count: vecs.length })}</p>`;
+                }
+            };
+            showVec(result.orthogonal, 'schmidt-ortho');
+            showVec(result.orthonormal, 'schmidt-on');
+        }
+    },
+
+    recalcQuadraticForm(state) {
+        let matrix = state.matrix.map(r => r.map(v => typeof v === 'object' && v.valueOf ? v.valueOf() : v));
+        
+        clearSteps('steps-container');
+        
+        addStep(`<p>${this.tf('step-quadratic-matrix', { dim: state.dimension })}</p><div id="step-qf"></div>`, 'steps-container');
+        displayMatrix(matrix, 'step-qf');
+        
+        let result;
+        
+        switch (state.operation) {
+            case 'standard-form': {
+                const { matrix: stdMatrix, eigenvalues } = standardForm(matrix);
+                
+                let evDisplay = `<p>${this.t('step-eigenvalues-label')}</p><ul class="list-disc list-inside space-y-1">`;
+                eigenvalues.forEach((ev, idx) => {
+                    if (typeof ev === 'object' && 'real' in ev) {
+                        const sign = ev.imag >= 0 ? '+' : '';
+                        evDisplay += `<li>λ<sub>${idx + 1}</sub> = ${formatNumber(ev.real)} ${sign}${formatNumber(ev.imag)}i</li>`;
+                    } else {
+                        evDisplay += `<li>λ<sub>${idx + 1}</sub> = ${formatNumber(ev)}</li>`;
+                    }
+                });
+                evDisplay += '</ul>';
+                addStep(evDisplay, 'steps-container');
+                
+                addStep(`<p>${this.t('step-std-matrix')}</p><div id="step-std"></div>`, 'steps-container');
+                displayMatrix(stdMatrix, 'step-std');
+                
+                result = { matrix: stdMatrix, eigenvalues };
+                break;
+            }
+            
+            case 'canonical-form': {
+                const canonMatrix = canonicalForm(matrix);
+                addStep(`<p>${this.t('step-canon-matrix')}</p><div id="step-canon"></div>`, 'steps-container');
+                displayMatrix(canonMatrix, 'step-canon');
+                
+                let p = 0, q = 0;
+                for (let i = 0; i < state.dimension; i++) {
+                    const ev = typeof matrix[i] !== 'undefined' ? (typeof matrix[i][i] === 'number' ? matrix[i][i] : 0) : 0;
+                    if (ev > 0) p++;
+                    else if (ev < 0) q++;
+                }
+                
+                result = canonMatrix;
+                break;
+            }
+            
+            case 'positive-definite': {
+                const isPD = isPositiveDefinite(matrix);
+                
+                let minorStr = `<p>${this.t('step-principal-minors')}</p><ul class="list-disc list-inside space-y-1">`;
+                for (let i = 1; i <= state.dimension; i++) {
+                    const minor = getPrincipalMinor(matrix, i);
+                    const det = determinant(minor);
+                    minorStr += `<li>Δ<sub>${i}</sub> = ${formatNumber(det)} ${det > 0 ? '> 0 ✓' : '≤ 0 ✗'}</li>`;
+                }
+                minorStr += '</ul>';
+                addStep(minorStr, 'steps-container');
+                
+                addStep(`<p class="font-semibold">${isPD ? '✓ ' + this.t('step-positive-definite-result') : '✗ ' + this.t('step-not-positive-definite')}</p>`, 'steps-container');
+                
+                result = isPD;
+                break;
+            }
+        }
+        
+        // 显示结果
+        if (typeof result === 'boolean') {
+            showResult(`
+                <div class="result-card">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${this.t('result-positive-def-analysis')}</h3>
+                    <p class="text-3xl font-bold text-center ${result ? 'text-green-600' : 'text-red-500'}">${result ? '✓ ' + this.t('result-positive-def') : '✗ ' + this.t('result-not-positive-def')}</p>
+                </div>
+            `);
+        } else if (result.matrix && result.eigenvalues) {
+            showResult(`
+                <div class="result-card">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${this.t('result-standard-form')}</h3>
+                    <div id="result-std"></div>
+                </div>
+            `);
+            displayMatrix(result.matrix, 'result-std');
+        } else {
+            showResult(`
+                <div class="result-card">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${this.t('result-canonical-form')}</h3>
+                    <div id="result-canon"></div>
+                </div>
+            `);
+            displayMatrix(result, 'result-canon');
         }
     },
 
