@@ -6,6 +6,94 @@
 // 全局历史记录
 let calculationHistory = [];
 
+// 最后一次计算状态（用于语言切换时重新渲染）
+let lastCalculationState = null;
+
+/**
+ * 侧边栏打开/关闭功能
+ */
+function initSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebarClose = document.getElementById('sidebar-close');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    const mainContent = document.getElementById('main-content');
+    const topTitleBar = document.getElementById('top-title-bar');
+    const topToolbar = document.getElementById('top-toolbar');
+    
+    if (!sidebar) return;
+    
+    // 从本地存储读取侧边栏状态
+    const savedState = localStorage.getItem('sidebarOpen');
+    const isOpen = savedState === null ? true : savedState === 'true'; // 默认打开
+    
+    function setSidebarState(open) {
+        if (open) {
+            sidebar.classList.remove('closed');
+            // 始终隐藏遮罩层，允许用户直接操作主界面
+            if (sidebarOverlay) sidebarOverlay.classList.add('hidden');
+            if (sidebarToggle) sidebarToggle.classList.add('hidden');
+            if (mainContent) mainContent.classList.remove('sidebar-closed');
+            // 同步调整顶部栏的左边距
+            if (topTitleBar) topTitleBar.classList.remove('header-closed');
+            if (topToolbar) topToolbar.classList.remove('header-closed');
+            localStorage.setItem('sidebarOpen', 'true');
+        } else {
+            sidebar.classList.add('closed');
+            // 遮罩层始终隐藏
+            if (sidebarOverlay) sidebarOverlay.classList.add('hidden');
+            if (sidebarToggle) sidebarToggle.classList.remove('hidden');
+            if (mainContent) mainContent.classList.add('sidebar-closed');
+            // 同步调整顶部栏的左边距
+            if (topTitleBar) topTitleBar.classList.add('header-closed');
+            if (topToolbar) topToolbar.classList.add('header-closed');
+            localStorage.setItem('sidebarOpen', 'false');
+        }
+    }
+    
+    // 应用初始状态
+    setSidebarState(isOpen);
+    
+    // 切换按钮事件
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+            setSidebarState(true);
+        });
+    }
+    
+    // 关闭按钮事件
+    if (sidebarClose) {
+        sidebarClose.addEventListener('click', () => {
+            setSidebarState(false);
+        });
+    }
+    
+    // Esc键关闭侧边栏
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            // 检查当前是否有输入框处于焦点（避免在输入时误触发）
+            const activeEl = document.activeElement;
+            const isInputFocused = activeEl && (
+                activeEl.tagName === 'INPUT' ||
+                activeEl.tagName === 'TEXTAREA' ||
+                activeEl.tagName === 'SELECT'
+            );
+            // 如果侧边栏打开且不在输入框中，则关闭侧边栏
+            const isSidebarOpen = !sidebar.classList.contains('closed');
+            if (isSidebarOpen && !isInputFocused) {
+                setSidebarState(false);
+            }
+        }
+    });
+    
+    // 遮罩点击事件
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', () => {
+            setSidebarState(false);
+        });
+    }
+}
+
 /**
  * 应用初始化
  */
@@ -21,7 +109,9 @@ function init() {
     }
     
     // 初始化各模块
+    initSidebar();
     initTabHandlers();
+    initScalarKeyNav();
     initStepsToggle();
     initDeterminantHandlers();
     initMatrixHandlers();
