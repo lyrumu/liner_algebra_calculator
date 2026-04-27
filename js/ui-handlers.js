@@ -24,6 +24,9 @@ function handleDeterminantCalculate() {
         
         const matrix = getMatrixFromInput('det-matrix-container', rows, cols);
         
+        // 保存当前计算状态
+        lastCalculationState = { type: 'determinant', rows, cols, matrix: matrix.map(row => row.map(v => toFraction(v.valueOf()))) };
+        
         clearSteps('steps-container');
         
         addStep(`<p>${tf('step-input-matrix', { rows, cols })}</p><div id="step-matrix"></div>`, 'steps-container');
@@ -35,7 +38,7 @@ function handleDeterminantCalculate() {
         
         showResult(`
             <div class="result-card">
-                <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-determinant')}</h3>
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${t('result-determinant')}</h3>
                 <p class="text-3xl font-bold text-primary text-center">${formatNumber(result)}</p>
             </div>
         `);
@@ -99,6 +102,11 @@ function handleMatrixCalculate() {
                 result = addMatrices(matrixA, matrixB);
                 historyInput.matrixB = matrixB;
                 
+                // 保存状态
+                lastCalculationState = { type: 'matrix', operation, rowsA, colsA, rowsB, colsB, 
+                    matrixA: matrixA.map(r => r.map(v => toFraction(v.valueOf()))),
+                    matrixB: matrixB.map(r => r.map(v => toFraction(v.valueOf()))) };
+                
                 addStep(`<p>A + B = </p><div id="step-result"></div>`, 'steps-container');
                 displayMatrix(result, 'step-result');
                 break;
@@ -114,6 +122,10 @@ function handleMatrixCalculate() {
                 
                 result = subtractMatrices(matrixA, matrixB);
                 historyInput.matrixB = matrixB;
+                
+                lastCalculationState = { type: 'matrix', operation, rowsA, colsA, rowsB, colsB,
+                    matrixA: matrixA.map(r => r.map(v => toFraction(v.valueOf()))),
+                    matrixB: matrixB.map(r => r.map(v => toFraction(v.valueOf()))) };
                 
                 addStep(`<p>A - B = </p><div id="step-result"></div>`, 'steps-container');
                 displayMatrix(result, 'step-result');
@@ -131,6 +143,10 @@ function handleMatrixCalculate() {
                 result = multiplyMatrices(matrixA, matrixB);
                 historyInput.matrixB = matrixB;
                 
+                lastCalculationState = { type: 'matrix', operation, rowsA, colsA, rowsB, colsB,
+                    matrixA: matrixA.map(r => r.map(v => toFraction(v.valueOf()))),
+                    matrixB: matrixB.map(r => r.map(v => toFraction(v.valueOf()))) };
+                
                 addStep(`<p>A × B = </p><div id="step-result"></div>`, 'steps-container');
                 displayMatrix(result, 'step-result');
                 break;
@@ -145,6 +161,9 @@ function handleMatrixCalculate() {
                 result = scalarMultiplyMatrix(matrixA, scalar);
                 historyInput.scalar = scalar;
                 
+                lastCalculationState = { type: 'matrix', operation, rowsA, colsA, scalar,
+                    matrixA: matrixA.map(r => r.map(v => toFraction(v.valueOf()))) };
+                
                 addStep(`<p>k × A = </p><div id="step-result"></div>`, 'steps-container');
                 displayMatrix(result, 'step-result');
                 break;
@@ -152,6 +171,8 @@ function handleMatrixCalculate() {
             
             case 'transpose': {
                 result = transposeMatrix(matrixA);
+                lastCalculationState = { type: 'matrix', operation, rowsA, colsA,
+                    matrixA: matrixA.map(r => r.map(v => toFraction(v.valueOf()))) };
                 addStep(`<p>A^T = </p><div id="step-result"></div>`, 'steps-container');
                 displayMatrix(result, 'step-result');
                 break;
@@ -159,6 +180,8 @@ function handleMatrixCalculate() {
             
             case 'inverse': {
                 result = inverseMatrix(matrixA);
+                lastCalculationState = { type: 'matrix', operation, rowsA, colsA,
+                    matrixA: matrixA.map(r => r.map(v => toFraction(v.valueOf()))) };
                 addStep(`<p>A^(-1) = </p><div id="step-result"></div>`, 'steps-container');
                 displayMatrix(result, 'step-result');
                 break;
@@ -166,6 +189,8 @@ function handleMatrixCalculate() {
             
             case 'adjugate': {
                 result = adjugateMatrix(matrixA);
+                lastCalculationState = { type: 'matrix', operation, rowsA, colsA,
+                    matrixA: matrixA.map(r => r.map(v => toFraction(v.valueOf()))) };
                 addStep(`<p>adj(A) = </p><div id="step-result"></div>`, 'steps-container');
                 displayMatrix(result, 'step-result');
                 break;
@@ -173,12 +198,16 @@ function handleMatrixCalculate() {
             
             case 'rank': {
                 result = matrixRank(matrixA);
+                lastCalculationState = { type: 'matrix', operation, rowsA, colsA,
+                    matrixA: matrixA.map(r => r.map(v => toFraction(v.valueOf()))) };
                 addStep(`<p>rank(A) = <strong>${result}</strong></p>`, 'steps-container');
                 break;
             }
             
             case 'trace': {
                 result = matrixTrace(matrixA);
+                lastCalculationState = { type: 'matrix', operation, rowsA, colsA,
+                    matrixA: matrixA.map(r => r.map(v => toFraction(v.valueOf()))) };
                 addStep(`<p>tr(A) = <strong>${formatNumber(result)}</strong></p>`, 'steps-container');
                 break;
             }
@@ -199,6 +228,9 @@ function handleMatrixCalculate() {
                 
                 addStep(eigenDisplay, 'steps-container');
                 result = eigenvalues;
+                
+                lastCalculationState = { type: 'matrix', operation, rowsA, colsA,
+                    matrixA: matrixA.map(r => r.map(v => toFraction(v.valueOf()))) };
                 break;
             }
         }
@@ -207,7 +239,7 @@ function handleMatrixCalculate() {
         if (Array.isArray(result) && Array.isArray(result[0])) {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${tf('result-matrix-op', { op: getOperationName(operation) })}</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${tf('result-matrix-op', { op: getOperationName(operation) })}</h3>
                     <div id="result-matrix"></div>
                 </div>
             `);
@@ -227,7 +259,7 @@ function handleMatrixCalculate() {
             
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-eigenvalues')}</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${t('result-eigenvalues')}</h3>
                     ${resultDisplay}
                 </div>
             `);
@@ -235,7 +267,7 @@ function handleMatrixCalculate() {
         } else {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-calculation')}</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${t('result-calculation')}</h3>
                     <p class="text-3xl font-bold text-primary text-center">${formatNumber(result)}</p>
                 </div>
             `);
@@ -289,6 +321,10 @@ function handleVectorCalculate() {
         
         let result, historyInput = { operation, vectorU: vectorU.map(v => toFraction(v.valueOf())) };
         
+        // 基础状态（所有运算共用）
+        lastCalculationState = { type: 'vector', operation, lengthU,
+            vectorU: vectorU.map(v => toFraction(v.valueOf())) };
+        
         switch (operation) {
             case 'add': {
                 const lengthV = parseInt(document.getElementById('vec-v-length').value) || 3;
@@ -301,6 +337,8 @@ function handleVectorCalculate() {
                 
                 result = addVectors(vectorU, vectorV);
                 historyInput.vectorV = vectorV.map(v => toFraction(v.valueOf()));
+                
+                lastCalculationState.vectorV = vectorV.map(v => toFraction(v.valueOf()));
                 
                 addStep(`<p>u + v = </p><div id="step-result"></div>`, 'steps-container');
                 displayVector(result, 'step-result');
@@ -319,6 +357,8 @@ function handleVectorCalculate() {
                 result = subtractVectors(vectorU, vectorV);
                 historyInput.vectorV = vectorV.map(v => toFraction(v.valueOf()));
                 
+                lastCalculationState.vectorV = vectorV.map(v => toFraction(v.valueOf()));
+                
                 addStep(`<p>u - v = </p><div id="step-result"></div>`, 'steps-container');
                 displayVector(result, 'step-result');
                 break;
@@ -332,6 +372,8 @@ function handleVectorCalculate() {
                 
                 result = scalarMultiplyVector(vectorU, scalar);
                 historyInput.scalar = scalar;
+                
+                lastCalculationState.scalar = scalar;
                 
                 addStep(`<p>k × u = </p><div id="step-result"></div>`, 'steps-container');
                 displayVector(result, 'step-result');
@@ -350,6 +392,8 @@ function handleVectorCalculate() {
                 result = dotProduct(vectorU, vectorV);
                 historyInput.vectorV = vectorV.map(v => toFraction(v.valueOf()));
                 
+                lastCalculationState.vectorV = vectorV.map(v => toFraction(v.valueOf()));
+                
                 addStep(`<p>u · v = <strong>${formatNumber(result)}</strong></p>`, 'steps-container');
                 break;
             }
@@ -367,6 +411,8 @@ function handleVectorCalculate() {
                 
                 result = crossProduct(vectorU, vectorV);
                 historyInput.vectorV = vectorV.map(v => toFraction(v.valueOf()));
+                
+                lastCalculationState.vectorV = vectorV.map(v => toFraction(v.valueOf()));
                 
                 addStep(`<p>u × v = </p><div id="step-result"></div>`, 'steps-container');
                 displayVector(result, 'step-result');
@@ -396,6 +442,8 @@ function handleVectorCalculate() {
                 
                 result = angleDeg;
                 historyInput.vectorV = vectorV.map(v => toFraction(v.valueOf()));
+                
+                lastCalculationState.vectorV = vectorV.map(v => toFraction(v.valueOf()));
                 break;
             }
             
@@ -416,6 +464,8 @@ function handleVectorCalculate() {
                 
                 result = isOrtho;
                 historyInput.vectorV = vectorV.map(v => toFraction(v.valueOf()));
+                
+                lastCalculationState.vectorV = vectorV.map(v => toFraction(v.valueOf()));
                 break;
             }
         }
@@ -424,7 +474,7 @@ function handleVectorCalculate() {
         if (Array.isArray(result)) {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${tf('result-vector-op', { op: getOperationName(operation) })}</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${tf('result-vector-op', { op: getOperationName(operation) })}</h3>
                     <div id="result-vector"></div>
                 </div>
             `);
@@ -433,7 +483,7 @@ function handleVectorCalculate() {
         } else if (typeof result === 'boolean') {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-orthogonality')}</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${t('result-orthogonality')}</h3>
                     <p class="text-3xl font-bold text-center ${result ? 'text-green-600' : 'text-red-500'}">${result ? '✓ ' + t('result-orthogonal') : '✗ ' + t('result-not-orthogonal')}</p>
                 </div>
             `);
@@ -441,7 +491,7 @@ function handleVectorCalculate() {
         } else {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-calculation')}</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${t('result-calculation')}</h3>
                     <p class="text-3xl font-bold text-primary text-center">${formatNumber(result)}</p>
                 </div>
             `);
@@ -466,6 +516,11 @@ function handleSystemCalculate() {
         if (equations < 1 || equations > 10 || variables < 1 || variables > 10) {
             throw new Error(t('error-eq-var-range'));
         }
+        
+        // 保存当前计算状态
+        lastCalculationState = { type: 'linear-system', method, equations, variables,
+            coefficients: coefficients.map(r => r.map(v => toFraction(v.valueOf()))),
+            constants: constants.map(v => toFraction(v.valueOf())) };
         
         clearSteps('steps-container');
         
@@ -566,25 +621,25 @@ function handleSystemCalculate() {
             
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">✓ ${t('result-unique-solution')}</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">✓ ${t('result-unique-solution')}</h3>
                     ${solDisplay}
                 </div>
             `);
             addToHistory('linear-system', { method, coefficients, constants }, t('result-unique-solution'));
         } else if (result.type === 'no-solution') {
             showResult(`
-                <div class="result-card border-red-200 bg-red-50">
-                    <h3 class="text-lg font-semibold text-red-700 mb-2">✗ ${t('result-no-solution')}</h3>
-                    <p class="text-red-600">${t('result-no-solution-desc')}</p>
+                <div class="result-card border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800">
+                    <h3 class="text-lg font-semibold text-red-700 dark:text-red-400 mb-2">✗ ${t('result-no-solution')}</h3>
+                    <p class="text-red-600 dark:text-red-300">${t('result-no-solution-desc')}</p>
                 </div>
             `);
             addToHistory('linear-system', { method, coefficients, constants }, t('result-no-solution'));
         } else {
             showResult(`
-                <div class="result-card border-yellow-200 bg-yellow-50">
-                    <h3 class="text-lg font-semibold text-yellow-700 mb-3">∞ ${t('result-infinite-solutions')}</h3>
-                    <p>${tf('result-rank', { rank: result.rank })}</p>
-                    <p>${tf('result-free-vars', { free: result.freeVariables })}</p>
+                <div class="result-card border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800">
+                    <h3 class="text-lg font-semibold text-yellow-700 dark:text-yellow-400 mb-3">∞ ${t('result-infinite-solutions')}</h3>
+                    <p class="text-gray-700 dark:text-gray-300">${tf('result-rank', { rank: result.rank })}</p>
+                    <p class="text-gray-700 dark:text-gray-300">${tf('result-free-vars', { free: result.freeVariables })}</p>
                 </div>
             `);
             addToHistory('linear-system', { method, coefficients, constants }, `${t('result-infinite-solutions')}（${t('op-rank')}=${result.rank}）`);
@@ -611,6 +666,10 @@ function handleVectorGroupCalculate() {
         for (let i = 0; i < vectorCount; i++) {
             vectors.push(getVectorFromInput(`vg-vector-${i}-container`, vectorDimension));
         }
+        
+        // 保存当前计算状态
+        lastCalculationState = { type: 'vector-group', operation, vectorCount, vectorDimension,
+            vectors: vectors.map(v => v.map(x => toFraction(x.valueOf()))) };
         
         clearSteps('steps-container');
         
@@ -683,7 +742,7 @@ function handleVectorGroupCalculate() {
         if (typeof result === 'boolean') {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-linear-dep-analysis')}</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${t('result-linear-dep-analysis')}</h3>
                     <p class="text-3xl font-bold text-center ${result ? 'text-orange-500' : 'text-green-600'}">${result ? t('result-linear-dep') : t('result-linear-indep')}</p>
                 </div>
             `);
@@ -691,7 +750,7 @@ function handleVectorGroupCalculate() {
         } else if (typeof result === 'number') {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-group-rank')}</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${t('result-group-rank')}</h3>
                     <p class="text-3xl font-bold text-primary text-center">${result}</p>
                 </div>
             `);
@@ -705,8 +764,8 @@ function handleVectorGroupCalculate() {
             
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-max-independent')}</h3>
-                    <p class="mb-2 text-gray-600">${tf('result-max-independent-desc', { count: result.vectors.length })}</p>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${t('result-max-independent')}</h3>
+                    <p class="mb-2 text-gray-600 dark:text-gray-400">${tf('result-max-independent-desc', { count: result.vectors.length })}</p>
                     ${vecDisplay}
                 </div>
             `);
@@ -714,8 +773,8 @@ function handleVectorGroupCalculate() {
         } else if (result.orthogonal && result.orthonormal) {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-schmidt')}</h3>
-                    <p class="text-gray-600 mb-2">${tf('result-orthogonalized', { count: result.orthogonal.length })}</p>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${t('result-schmidt')}</h3>
+                    <p class="text-gray-600 dark:text-gray-400 mb-2">${tf('result-orthogonalized', { count: result.orthogonal.length })}</p>
                     <div id="schmidt-ortho" class="mb-4"></div>
                     <p class="text-gray-600 mb-2">${tf('result-normalized', { count: result.orthonormal.length })}</p>
                     <div id="schmidt-on"></div>
@@ -771,6 +830,10 @@ function handleQuadraticCalculate() {
             symMatrix = makeSymmetric(matrix);
             wasSymmetrized = true;
         }
+        
+        // 保存当前计算状态
+        lastCalculationState = { type: 'quadratic-form', operation, dimension,
+            matrix: symMatrix.map(r => r.map(v => toFraction(v.valueOf()))) };
         
         clearSteps('steps-container');
         
@@ -845,7 +908,7 @@ function handleQuadraticCalculate() {
         if (typeof result === 'boolean') {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-positive-def-analysis')}</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${t('result-positive-def-analysis')}</h3>
                     <p class="text-3xl font-bold text-center ${result ? 'text-green-600' : 'text-red-500'}">${result ? '✓ ' + t('result-positive-def') : '✗ ' + t('result-not-positive-def')}</p>
                 </div>
             `);
@@ -853,7 +916,7 @@ function handleQuadraticCalculate() {
         } else if (result.matrix && result.eigenvalues) {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-standard-form')}</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${t('result-standard-form')}</h3>
                     <div id="result-std"></div>
                 </div>
             `);
@@ -862,7 +925,7 @@ function handleQuadraticCalculate() {
         } else {
             showResult(`
                 <div class="result-card">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">${t('result-canonical-form')}</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">${t('result-canonical-form')}</h3>
                     <div id="result-canon"></div>
                 </div>
             `);
