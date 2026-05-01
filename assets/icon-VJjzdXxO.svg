@@ -1,0 +1,22 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a56db"/>
+      <stop offset="100%" style="stop-color:#1e3a8a"/>
+    </linearGradient>
+  </defs>
+  <!-- 圆角蓝色背景 -->
+  <rect width="64" height="64" rx="12" fill="url(#bg)"/>
+  <!-- 矩阵数字内容 -->
+  <text x="8"  y="24" font-family="monospace" font-size="8.5" fill="white" opacity="0.6">1  2  3</text>
+  <text x="8"  y="36" font-family="monospace" font-size="8.5" fill="white">4  5  6</text>
+  <text x="8"  y="48" font-family="monospace" font-size="8.5" fill="white" opacity="0.6">7  8  9</text>
+  <!-- 左方括号 -->
+  <rect x="3"  y="13" width="2.5" height="38" rx="1.2" fill="white"/>
+  <rect x="3"  y="13" width="9"   height="2.5" rx="1.2" fill="white"/>
+  <rect x="3"  y="48.5" width="9" height="2.5" rx="1.2" fill="white"/>
+  <!-- 右方括号 -->
+  <rect x="58.5" y="13" width="2.5" height="38" rx="1.2" fill="white"/>
+  <rect x="52" y="13" width="9"   height="2.5" rx="1.2" fill="white"/>
+  <rect x="52" y="48.5" width="9" height="2.5" rx="1.2" fill="white"/>
+</svg>
