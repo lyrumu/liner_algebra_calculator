@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 export default defineConfig({
-  base: '/liner_algebra_calculator/',
+  base: '/linear_algebra_calculator/',
   plugins: [react()],
   resolve: {
     alias: {
