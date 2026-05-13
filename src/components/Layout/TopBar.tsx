@@ -35,7 +35,7 @@ export function TopBar({ title, isDark, onToggleTheme, onToggleLang, onToggleHis
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </Button>
           <a
-            href="https://github.com/lyrumu/liner_algebra_calculator"
+            href="https://github.com/lyrumu/linear_algebra_calculator"
             target="_blank"
             rel="noopener noreferrer"
             title={t('github')}
